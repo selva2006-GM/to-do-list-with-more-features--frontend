@@ -25,7 +25,7 @@ export default function CreateTask(){
 
 
         {showInput && (
-            <form action={saveTask} id="tasks">
+            <form onSubmit={saveTask} id="tasks">
                 <label>Enter the task:
                     <input type="text" 
                     value={task} 
