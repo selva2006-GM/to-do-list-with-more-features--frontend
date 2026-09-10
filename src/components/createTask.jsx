@@ -1,39 +1,69 @@
-import React from "react";
-import { useState } from "react";
 
-export default function CreateTask(){
+import React, { useState } from "react";
+
+export default function CreateTask() {
 
     const [showInput, setShowInput] = useState(false);
     const [task, setTask] = useState("");
 
-    function saveTask(event){
+    const URL = "http://localhost:5000/createtask";
+
+    function saveTask(event) {
 
         event.preventDefault();
+
         console.log("Task:", task);
 
-        setTask("");
+        const date = new Date();
+        const taskid = date.getTime();
 
+        console.log(`taskid = ${taskid}`);
+
+        const options = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                taskid: taskid,
+                task: task
+            })
+        };
+
+        fetch(URL, options)
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error("Error:", error));
+
+        setTask("");
         setShowInput(false);
-    
     }
 
-    return(
+    return (
         <>
-        <button onClick={()=>setShowInput(true)}>CreateButton
+            <button onClick={() => setShowInput(true)}>
+                CreateButton
+            </button>
 
-        </button>
+            {showInput && (
+                <form onSubmit={saveTask} id="tasks">
 
+                    <label>
+                        Enter the task:
 
-        {showInput && (
-            <form onSubmit={saveTask} id="tasks">
-                <label>Enter the task:
-                    <input type="text" 
-                    value={task} 
-                    onChange={(e)=>setTask(e.target.value)}/>
-                </label>
-                <button type="submit">submit</button>
-            </form>
-        )}
+                        <input
+                            type="text"
+                            value={task}
+                            onChange={(e) => setTask(e.target.value)}
+                        />
+                    </label>
+
+                    <button type="submit">
+                        submit
+                    </button>
+
+                </form>
+            )}
         </>
     );
-};
+}
