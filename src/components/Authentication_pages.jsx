@@ -15,6 +15,8 @@ export default function Authentication_pages(){
     }
     function senddata(){
 
+        const response = fetch("")
+
     }
     return(
         <>
