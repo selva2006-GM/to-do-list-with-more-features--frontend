@@ -1,0 +1,159 @@
+.task-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.task {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.task-id {
+    width: 25px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.task input[type="text"] {
+    width: 300px;
+    padding: 10px;
+
+    border: 1px solid #ccc;
+    border-radius: 5px;
+
+    outline: none;
+}
+
+.task input[type="text"]:focus {
+    border-color: #333;
+}
+
+.task button {
+    padding: 10px 15px;
+
+    border: none;
+    border-radius: 5px;
+
+    background: rgb(14, 89, 56);
+    color: white;
+
+    cursor: pointer;
+}
+
+.task button:hover {
+    background: rgb(10, 70, 44);
+}
+
+.task-text {
+    width: 300px;
+    padding: 10px;
+}
+
+.completed {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.task input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.plus-button {
+    width: 40px;
+    height: 40px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgb(14, 89, 56);
+    color: white;
+
+    font-size: 25px;
+
+    cursor: pointer;
+}
+
+.plus-button:hover {
+    background: rgb(10, 70, 44);
+}
+
+
+.task-container {
+    width: 600px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin: 20px auto;
+}
+
+.task {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.task-id {
+    width: 45px;
+
+    text-align: right;
+    font-weight: 600;
+}
+
+.task-text {
+    flex: 1;
+
+    font-size: 20px;
+}
+
+.task input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+}
+
+.task button {
+    padding: 10px 18px;
+
+    border: none;
+    border-radius: 6px;
+
+    background: rgb(14, 89, 56);
+    color: white;
+
+    font-size: 16px;
+
+    cursor: pointer;
+}
+
+.task button:hover {
+    background: rgb(10, 70, 44);
+}
+
+.completed {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.plus-button {
+    align-self: center;
+
+    width: 50px;
+    height: 50px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgb(14, 89, 56);
+    color: white;
+
+    font-size: 25px;
+
+    cursor: pointer;
+}
