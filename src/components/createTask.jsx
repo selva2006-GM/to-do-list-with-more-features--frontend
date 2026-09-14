@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import "./createTask.css";
 
@@ -13,6 +14,16 @@ export default function CreateTask() {
             : [];
     });
 
+    const [session, setSession] = useState(() => {
+        const savedSession = localStorage.getItem("taskSession");
+
+        return savedSession
+            ? JSON.parse(savedSession)
+            : null;
+    });
+
+    const [currentTime, setCurrentTime] = useState(Date.now());
+
     useEffect(() => {
         localStorage.setItem(
             "tasks",
@@ -20,15 +31,42 @@ export default function CreateTask() {
         );
     }, [tasks]);
 
+    useEffect(() => {
+        if (session?.startTime && !session?.completedAt) {
 
-    // Only today's tasks
+            const timer = setInterval(() => {
+                setCurrentTime(Date.now());
+            }, 1000);
+
+            return () => clearInterval(timer);
+        }
+    }, [session]);
+
+    useEffect(() => {
+        if (session) {
+            localStorage.setItem(
+                "taskSession",
+                JSON.stringify(session)
+            );
+        }
+    }, [session]);
+
+
     const todayTasks = tasks.filter(
         task => task.date === today
     );
 
+    const todaySession =
+        session?.date === today
+            ? session
+            : null;
 
-    // Create a new task
+
     function addTask() {
+
+        if (todaySession?.startTime) {
+            return;
+        }
 
         const newTask = {
             id: crypto.randomUUID(),
@@ -46,8 +84,11 @@ export default function CreateTask() {
     }
 
 
-    // Update task text
     function updateTask(id, value) {
+
+        if (todaySession?.startTime) {
+            return;
+        }
 
         setTasks(prevTasks =>
             prevTasks.map(task =>
@@ -62,8 +103,11 @@ export default function CreateTask() {
     }
 
 
-    // Submit task
     function submitTask(id) {
+
+        if (todaySession?.startTime) {
+            return;
+        }
 
         setTasks(prevTasks =>
             prevTasks.map(task =>
@@ -78,8 +122,11 @@ export default function CreateTask() {
     }
 
 
-    // Edit task
     function editTask(id) {
+
+        if (todaySession?.startTime) {
+            return;
+        }
 
         setTasks(prevTasks =>
             prevTasks.map(task =>
@@ -94,8 +141,11 @@ export default function CreateTask() {
     }
 
 
-    // Save edited task
     function saveTask(id) {
+
+        if (todaySession?.startTime) {
+            return;
+        }
 
         setTasks(prevTasks =>
             prevTasks.map(task =>
@@ -110,7 +160,6 @@ export default function CreateTask() {
     }
 
 
-    // Complete / uncomplete task
     function completeTask(id) {
 
         setTasks(prevTasks =>
@@ -126,26 +175,117 @@ export default function CreateTask() {
     }
 
 
+    function startSession() {
+
+        if (todayTasks.length === 0) {
+            return;
+        }
+
+        const confirmStart = window.confirm(
+            "Once you start, you cannot edit or add tasks. Start the timer?"
+        );
+
+        if (!confirmStart) {
+            return;
+        }
+
+        setSession({
+            date: today,
+            startTime: Date.now(),
+            completedAt: null
+        });
+    }
+
+
+    useEffect(() => {
+
+        if (
+            todaySession?.startTime &&
+            !todaySession?.completedAt &&
+            todayTasks.length > 0
+        ) {
+
+            const allCompleted =
+                todayTasks.every(
+                    task => task.completed
+                );
+
+            if (allCompleted) {
+
+                setSession(prev => ({
+                    ...prev,
+                    completedAt: Date.now()
+                }));
+            }
+        }
+
+    }, [
+        tasks,
+        todaySession
+    ]);
+
+
+    function getElapsedTime() {
+
+        if (!todaySession?.startTime) {
+            return 0;
+        }
+
+        const endTime =
+            todaySession.completedAt || currentTime;
+
+        return Math.floor(
+            (endTime - todaySession.startTime) / 1000
+        );
+    }
+
+
+    function formatTime(seconds) {
+
+        const hours = Math.floor(
+            seconds / 3600
+        );
+
+        const minutes = Math.floor(
+            (seconds % 3600) / 60
+        );
+
+        const secs = seconds % 60;
+
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+
+    const sessionStarted =
+        todaySession?.startTime;
+
+    const sessionFinished =
+        todaySession?.completedAt;
+
+
     return (
         <div className="task-container">
 
-            {/* No tasks for today */}
             {todayTasks.length === 0 && (
-
                 <button
                     className="create-button"
                     onClick={addTask}
                 >
                     Start Today
                 </button>
-
             )}
 
 
-            {/* Today's tasks */}
             {todayTasks.length > 0 && (
-
                 <>
+
+                    {sessionStarted && (
+                        <div className="total-timer">
+                            ⏱️ {formatTime(getElapsedTime())}
+                        </div>
+                    )}
+
+
                     {todayTasks.map((task, index) => (
 
                         <div
@@ -153,81 +293,88 @@ export default function CreateTask() {
                             key={task.id}
                         >
 
-                            {/* Task number */}
                             <span className="task-id">
                                 {index + 1}
                             </span>
 
 
-                            {/* New task */}
-                            {!task.submitted && !task.editing && (
+                            {!task.submitted &&
+                                !task.editing && (
+                                    <>
+                                        <input
+                                            type="text"
+                                            placeholder="Enter your task"
+                                            value={task.text}
+                                            disabled={sessionStarted}
+                                            onChange={(e) =>
+                                                updateTask(
+                                                    task.id,
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
 
-                                <>
-                                    <input
-                                        type="text"
-                                        placeholder="Enter your task"
-                                        value={task.text}
-                                        onChange={(e) =>
-                                            updateTask(
-                                                task.id,
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-
-                                    <button
-                                        onClick={() =>
-                                            submitTask(task.id)
-                                        }
-                                    >
-                                        Enter
-                                    </button>
-                                </>
-
-                            )}
-
-
-                            {/* Display submitted task */}
-                            {task.submitted && !task.editing && (
-
-                                <>
-                                    <span
-                                        className={
-                                            task.completed
-                                                ? "task-text completed"
-                                                : "task-text"
-                                        }
-                                    >
-                                        {task.text}
-                                    </span>
-
-                                    <input
-                                        type="checkbox"
-                                        checked={task.completed}
-                                        onChange={() =>
-                                            completeTask(task.id)
-                                        }
-                                    />
-
-                                    <button
-                                        onClick={() =>
-                                            editTask(task.id)
-                                        }
-                                    >
-                                        Edit
-                                    </button>
-                                </>
-
-                            )}
+                                        {!sessionStarted && (
+                                            <button
+                                                onClick={() =>
+                                                    submitTask(task.id)
+                                                }
+                                            >
+                                                Enter
+                                            </button>
+                                        )}
+                                    </>
+                                )}
 
 
-                            {/* Edit task */}
+                            {task.submitted &&
+                                !task.editing && (
+                                    <>
+                                        <span
+                                            className={
+                                                task.completed
+                                                    ? "task-text completed"
+                                                    : "task-text"
+                                            }
+                                        >
+                                            {task.text}
+                                        </span>
+
+                                        <input
+                                            type="checkbox"
+                                            checked={task.completed}
+                                            disabled={
+                                                !sessionStarted ||
+                                                sessionFinished
+                                                    ? false
+                                                    : false
+                                            }
+                                            onChange={() =>
+                                                completeTask(
+                                                    task.id
+                                                )
+                                            }
+                                        />
+
+                                        {!sessionStarted && (
+                                            <button
+                                                onClick={() =>
+                                                    editTask(task.id)
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+
+
                             {task.editing && (
-
                                 <>
                                     <input
                                         type="text"
                                         value={task.text}
+                                        disabled={sessionStarted}
                                         onChange={(e) =>
                                             updateTask(
                                                 task.id,
@@ -236,15 +383,16 @@ export default function CreateTask() {
                                         }
                                     />
 
-                                    <button
-                                        onClick={() =>
-                                            saveTask(task.id)
-                                        }
-                                    >
-                                        Save
-                                    </button>
+                                    {!sessionStarted && (
+                                        <button
+                                            onClick={() =>
+                                                saveTask(task.id)
+                                            }
+                                        >
+                                            Save
+                                        </button>
+                                    )}
                                 </>
-
                             )}
 
                         </div>
@@ -252,19 +400,35 @@ export default function CreateTask() {
                     ))}
 
 
-                    {/* Add another task */}
-                    <button
-                        className="plus-button"
-                        onClick={addTask}
-                    >
-                        +
-                    </button>
+                    {!sessionStarted && (
+                        <button
+                            className="start-button"
+                            onClick={startSession}
+                        >
+                            Start
+                        </button>
+                    )}
+
+
+                    {sessionStarted &&
+                        !sessionFinished && (
+                            <div className="session-status">
+                                Working...
+                            </div>
+                        )}
+
+
+                    {sessionFinished && (
+                        <div className="session-status">
+                            Completed in {formatTime(
+                                getElapsedTime()
+                            )}
+                        </div>
+                    )}
 
                 </>
-
             )}
 
         </div>
     );
 }
-

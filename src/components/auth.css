@@ -1,0 +1,38 @@
+
+.auth-container {
+    min-height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-form {
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 30px;
+}
+
+.auth-form h1 {
+    text-align: center;
+}
+
+.auth-form input {
+    padding: 12px;
+    font-size: 16px;
+}
+
+.auth-form button {
+    padding: 12px;
+    cursor: pointer;
+}
+
+.auth-form p {
+    text-align: center;
+}
+
+.auth-form a {
+    text-decoration: none;
+}
+
