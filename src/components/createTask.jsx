@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
+import "./createTask.css";
 
-import "./createTask.css"
 export default function CreateTask() {
 
-   
     const today = new Date().toISOString().split("T")[0];
 
     const [tasks, setTasks] = useState(() => {
-
         const savedTasks = localStorage.getItem("tasks");
 
         return savedTasks
@@ -16,110 +14,20 @@ export default function CreateTask() {
     });
 
     useEffect(() => {
-
         localStorage.setItem(
             "tasks",
             JSON.stringify(tasks)
         );
-
     }, [tasks]);
 
 
+    // Only today's tasks
     const todayTasks = tasks.filter(
         task => task.date === today
     );
 
 
-    function createTask() {
-
-        const newTask = {
-            id: crypto.randomUUID(),
-            text: "",
-            date: today,
-            submitted: false,
-            completed: false,
-            editing: false
-        };
-
-        setTasks([
-            ...tasks,
-            newTask
-        ]);
-    }
-
-    function updateTask(id, value) {
-
-        setTasks(
-            tasks.map(task =>
-                task.id === id
-                    ? {
-                        ...task,
-                        text: value
-                    }
-                    : task
-            )
-        );
-    }
-
-    function submitTask(id) {
-
-        setTasks(
-            tasks.map(task =>
-                task.id === id
-                    ? {
-                        ...task,
-                        submitted: true
-                    }
-                    : task
-            )
-        );
-    }
-
-
-    function editTask(id) {
-
-        setTasks(
-            tasks.map(task =>
-                task.id === id
-                    ? {
-                        ...task,
-                        editing: true
-                    }
-                    : task
-            )
-        );
-    }
-
-
-    function saveTask(id) {
-
-        setTasks(
-            tasks.map(task =>
-                task.id === id
-                    ? {
-                        ...task,
-                        editing: false
-                    }
-                    : task
-            )
-        );
-    }
-
-    function completeTask(id) {
-
-        setTasks(
-            tasks.map(task =>
-                task.id === id
-                    ? {
-                        ...task,
-                        completed: !task.completed
-                    }
-                    : task
-            )
-        );
-    }
-
-
+    // Create a new task
     function addTask() {
 
         const newTask = {
@@ -131,38 +39,127 @@ export default function CreateTask() {
             editing: false
         };
 
-        setTasks([
-            ...tasks,
+        setTasks(prevTasks => [
+            ...prevTasks,
             newTask
         ]);
+    }
+
+
+    // Update task text
+    function updateTask(id, value) {
+
+        setTasks(prevTasks =>
+            prevTasks.map(task =>
+                task.id === id
+                    ? {
+                        ...task,
+                        text: value
+                    }
+                    : task
+            )
+        );
+    }
+
+
+    // Submit task
+    function submitTask(id) {
+
+        setTasks(prevTasks =>
+            prevTasks.map(task =>
+                task.id === id
+                    ? {
+                        ...task,
+                        submitted: true
+                    }
+                    : task
+            )
+        );
+    }
+
+
+    // Edit task
+    function editTask(id) {
+
+        setTasks(prevTasks =>
+            prevTasks.map(task =>
+                task.id === id
+                    ? {
+                        ...task,
+                        editing: true
+                    }
+                    : task
+            )
+        );
+    }
+
+
+    // Save edited task
+    function saveTask(id) {
+
+        setTasks(prevTasks =>
+            prevTasks.map(task =>
+                task.id === id
+                    ? {
+                        ...task,
+                        editing: false
+                    }
+                    : task
+            )
+        );
+    }
+
+
+    // Complete / uncomplete task
+    function completeTask(id) {
+
+        setTasks(prevTasks =>
+            prevTasks.map(task =>
+                task.id === id
+                    ? {
+                        ...task,
+                        completed: !task.completed
+                    }
+                    : task
+            )
+        );
     }
 
 
     return (
         <div className="task-container">
 
+            {/* No tasks for today */}
             {todayTasks.length === 0 && (
 
                 <button
                     className="create-button"
-                    onClick={createTask}
+                    onClick={addTask}
                 >
                     Start Today
                 </button>
 
             )}
 
-            {todayTasks.map((task, index) => (
-                <div className="task" key={task.id}>
 
+            {/* Today's tasks */}
+            {todayTasks.length > 0 && (
+
+                <>
+                    {todayTasks.map((task, index) => (
+
+                        <div
+                            className="task"
+                            key={task.id}
+                        >
+
+                            {/* Task number */}
                             <span className="task-id">
                                 {index + 1}
                             </span>
-                <div/>
-                <div/>
+
 
                             {/* New task */}
-
                             {!task.submitted && !task.editing && (
 
                                 <>
@@ -189,46 +186,42 @@ export default function CreateTask() {
 
                             )}
 
-                            {task.submitted &&
-                                !task.editing && (
 
-                                    <>
-                                        <span
-                                            className={
-                                                task.completed
-                                                    ? "task-text completed"
-                                                    : "task-text"
-                                            }
-                                        >
-                                            {task.text}
-                                        </span>
+                            {/* Display submitted task */}
+                            {task.submitted && !task.editing && (
 
+                                <>
+                                    <span
+                                        className={
+                                            task.completed
+                                                ? "task-text completed"
+                                                : "task-text"
+                                        }
+                                    >
+                                        {task.text}
+                                    </span>
 
-                                        <input
-                                            type="checkbox"
-                                            checked={task.completed}
-                                            onChange={() =>
-                                                completeTask(
-                                                    task.id
-                                                )
-                                            }
-                                        />
+                                    <input
+                                        type="checkbox"
+                                        checked={task.completed}
+                                        onChange={() =>
+                                            completeTask(task.id)
+                                        }
+                                    />
 
+                                    <button
+                                        onClick={() =>
+                                            editTask(task.id)
+                                        }
+                                    >
+                                        Edit
+                                    </button>
+                                </>
 
-                                        <button
-                                            onClick={() =>
-                                                editTask(task.id)
-                                            }
-                                        >
-                                            Edit
-                                        </button>
-                                    </>
-
-                                )}
+                            )}
 
 
                             {/* Edit task */}
-
                             {task.editing && (
 
                                 <>
@@ -259,8 +252,7 @@ export default function CreateTask() {
                     ))}
 
 
-                    {/* Add task */}
-
+                    {/* Add another task */}
                     <button
                         className="plus-button"
                         onClick={addTask}
@@ -275,3 +267,4 @@ export default function CreateTask() {
         </div>
     );
 }
+
