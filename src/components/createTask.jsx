@@ -163,10 +163,10 @@ export default function CreateTask() {
                         >
 
                             {/* Task ID */}
-
+{/* 
                             <span className="task-id">
                                 {task.id.slice(0, 4)}
-                            </span>
+                            </span> */}
 
 
                             {/* New task */}
