@@ -12,7 +12,6 @@ export default function Nav() {
         if (confirmReset) {
             localStorage.removeItem("tasks");
 
-            // Refresh the page so the UI updates
             window.location.reload();
         }
     }

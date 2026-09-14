@@ -152,22 +152,14 @@ export default function CreateTask() {
 
             )}
 
-            {todayTasks.length > 0 && (
+            {todayTasks.map((task, index) => (
+                <div className="task" key={task.id}>
 
-                <>
-                    {todayTasks.map(task => (
-
-                        <div
-                            className="task"
-                            key={task.id}
-                        >
-
-                            {/* Task ID */}
-{/* 
                             <span className="task-id">
-                                {task.id.slice(0, 4)}
-                            </span> */}
-
+                                {index + 1}
+                            </span>
+                <div/>
+                <div/>
 
                             {/* New task */}
 
