@@ -1,4 +1,3 @@
-
 import React from "react";
 import "./Nav.css";
 import { Link } from "react-router-dom";
@@ -12,6 +11,7 @@ export default function Nav() {
 
         if (confirmReset) {
             localStorage.removeItem("tasks");
+            localStorage.removeItem("taskSession");
 
             window.location.reload();
         }
@@ -19,21 +19,33 @@ export default function Nav() {
 
     return (
         <div className="Nav">
-            <div className="logo">Tracker</div>
+
+            <div className="logo">
+                <Link to="/">
+                    Tracker
+                </Link>
+            </div>
 
             <div className="Links">
-            <Link to="/login">
-                Login
-            </Link>
 
-            <Link to="/register">
-                Register
-            </Link>
-                <a href="">Create Task</a>
+                <Link to="/login">
+                    Login
+                </Link>
 
-                <button onClick={reset}>Reset</button>
+                <Link to="/register">
+                    Register
+                </Link>
+
+                <Link to="/create-task">
+                    Create Task
+                </Link>
+
+                <button onClick={reset}>
+                    Reset
+                </button>
+
             </div>
+
         </div>
     );
 }
-

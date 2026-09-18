@@ -11,29 +11,7 @@ export default function Login() {
 
     function login(e) {
         e.preventDefault();
-
-        const savedUser = localStorage.getItem("user");
-
-        if (!savedUser) {
-            alert("No account found. Please register first.");
-            return;
-        }
-
-        const user = JSON.parse(savedUser);
-
-        if (
-            user.email !== email ||
-            user.password !== password
-        ) {
-            alert("Invalid email or password");
-            return;
-        }
-
-        localStorage.setItem(
-            "isLoggedIn",
-            "true"
-        );
-
+        const response = fetch()
         navigate("/create-task");
     }
 
@@ -65,7 +43,7 @@ export default function Login() {
                     }
                 />
 
-                <button type="submit">
+                <button onSubmit={login}>
                     Login
                 </button>
 
