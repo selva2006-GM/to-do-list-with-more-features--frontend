@@ -8,7 +8,8 @@ import {
 import Home from "./components/Home";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import CreateTask from "./components/createTask";
+import CreateTask from "./components/CreateTask";
+import Dashboard from "./components/Dashboard";
 
 export default function App() {
 
@@ -30,6 +31,10 @@ export default function App() {
                 <Route
                     path="/register"
                     element={<Register />}
+                />
+                <Route
+                    path="/dashboard"
+                    element={<Dashboard />}
                 />
 
                 <Route

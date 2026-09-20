@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./auth.css";
+import API_URL from "../config/api";
 
 export default function Register() {
-
     const navigate = useNavigate();
 
     const [username, setUsername] = useState("");
@@ -11,7 +11,7 @@ export default function Register() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    function register(e) {
+    async function register(e) {
         e.preventDefault();
 
         if (!username || !email || !password || !confirmPassword) {
@@ -24,31 +24,45 @@ export default function Register() {
             return;
         }
 
-        const existingUser = localStorage.getItem("user");
+        try {
+            const response = await fetch(`${API_URL}/signup`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: username.trim(),
+                    email: email.trim(),
+                    password,
+                }),
+            });
 
-        if (existingUser) {
-            const user = JSON.parse(existingUser);
+            const data = await response.json();
 
-            if (user.email === email) {
-                alert("Email already registered");
+            if (!response.ok) {
+                alert(data.message || "Registration failed");
                 return;
             }
+
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+            }
+
+            if (data.user) {
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(data.user)
+                );
+            }
+
+            alert("Registration successful!");
+
+            navigate("/login");
+
+        } catch (error) {
+            console.error("REGISTER ERROR:", error);
+            alert("Unable to connect to server.");
         }
-
-        const user = {
-            username,
-            email,
-            password
-        };
-
-        localStorage.setItem(
-            "user",
-            JSON.stringify(user)
-        );
-
-        alert("Registration successful");
-
-        navigate("/login");
     }
 
     return (
@@ -68,6 +82,8 @@ export default function Register() {
                     onChange={(e) =>
                         setUsername(e.target.value)
                     }
+                    autoComplete="username"
+                    required
                 />
 
                 <input
@@ -77,6 +93,8 @@ export default function Register() {
                     onChange={(e) =>
                         setEmail(e.target.value)
                     }
+                    autoComplete="email"
+                    required
                 />
 
                 <input
@@ -86,6 +104,8 @@ export default function Register() {
                     onChange={(e) =>
                         setPassword(e.target.value)
                     }
+                    autoComplete="new-password"
+                    required
                 />
 
                 <input
@@ -95,6 +115,8 @@ export default function Register() {
                     onChange={(e) =>
                         setConfirmPassword(e.target.value)
                     }
+                    autoComplete="new-password"
+                    required
                 />
 
                 <button type="submit">

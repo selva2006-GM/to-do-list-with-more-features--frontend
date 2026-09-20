@@ -1,8 +1,25 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./Nav.css";
 import { Link } from "react-router-dom";
 
 export default function Nav() {
+    const [logged, setlogget] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        if (token) {
+            setlogget(true);
+        } else {
+            setlogget(false);
+        }
+    }, []);
+
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setlogget(false);
+    }
 
     function reset() {
         const confirmReset = window.confirm(
@@ -28,17 +45,27 @@ export default function Nav() {
 
             <div className="Links">
 
-                <Link to="/login">
-                    Login
-                </Link>
+                {!logged && (
+                    <>
+                        <Link to="/login">
+                            Login
+                        </Link>
 
-                <Link to="/register">
-                    Register
-                </Link>
+                        <Link to="/register">
+                            Register
+                        </Link>
+                    </>
+                )}
 
-                <Link to="/create-task">
+                {logged && (
+                    <button onClick={logout}>
+                        Logout
+                    </button>
+                )}
+
+                {/* <Link to="/create-task">
                     Create Task
-                </Link>
+                </Link> */}
 
                 <button onClick={reset}>
                     Reset
