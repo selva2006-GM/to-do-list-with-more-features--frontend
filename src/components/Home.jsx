@@ -1,20 +1,22 @@
 import React from "react";
 import Nav from "./Nav";
-
+import Leaderboard from "./Leaderboard";
 
 export default function Home() {
+
     const token = localStorage.getItem("token");
-    const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-
-    const today = new Date().toISOString().split("T")[0];
-
-    const todayTasks = tasks.filter(
-        (task) => task.date === today
-    );
 
     return (
         <>
             <Nav />
+
+            {!token && (
+                <h1>
+                    Hello, what's your plan for today?
+                </h1>
+            )}
+
+            <Leaderboard />
         </>
     );
 }

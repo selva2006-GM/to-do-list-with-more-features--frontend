@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import "./Nav.css";
-import { Link } from "react-router-dom"
+
+import { Link } from "react-router-dom";
 
 export default function Nav() {
+
     const [logged, setlogget] = useState(false);
+
+    
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -14,11 +17,13 @@ export default function Nav() {
             setlogget(false);
         }
     }, []);
-    
+
     function logout() {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+
         setlogget(false);
+
         window.location.reload();
     }
 
@@ -38,12 +43,16 @@ export default function Nav() {
     return (
         <div className="Nav">
 
-<div className="logo">
-    <Link to="/">
-        <img src="../../public/licon.svg" alt="Tracker" />
-        <span>Tracker</span>
-    </Link>
-</div>
+            <div className="logo">
+                <Link to="/">
+                    <img
+                        src="/licon.svg"
+                        alt="Tracker"
+                    />
+
+                    <span>Tracker</span>
+                </Link>
+            </div>
 
             <div className="Links">
 
@@ -64,17 +73,17 @@ export default function Nav() {
                         Logout
                     </button>
                 )}
+
                 {!logged && (
                     <button onClick={reset}>
-                    Reset
-                </button>
+                        Reset
+                    </button>
                 )}
 
                 <Link to="/create-task">
                     Create Task
                 </Link>
 
-                
 
             </div>
 
