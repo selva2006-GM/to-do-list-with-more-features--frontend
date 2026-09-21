@@ -41,9 +41,6 @@ export default function Login() {
                     JSON.stringify(data.user)
                 );
             }
-
-            alert("Login successful!");
-
             navigate("/");
 
         } catch (error) {
@@ -54,6 +51,7 @@ export default function Login() {
 
     return (
         <div className="auth-container">
+            
             <form
                 className="auth-form"
                 onSubmit={login}

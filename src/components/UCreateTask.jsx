@@ -1,24 +1,55 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useState } from "react";
+import { useEffect } from "react";
 import "./CreateTask.css";
-import API_URL from "../config/api";
+import { Link } from "react-router-dom";
 
-export default function CreateTask() {
+export default function UCreateTask() {
     const [tasks, setTasks] = useState([]);
     const [session, setSession] = useState(null);
     const [currentTime, setCurrentTime] = useState(Date.now());
-    const [loading, setLoading] = useState(true);
+    const [loaded, setLoaded] = useState(false);
 
     const today = new Date().toISOString().split("T")[0];
 
     useEffect(() => {
-        loadTasks();
-
+        const savedTasks = localStorage.getItem("tasks");
         const savedSession = localStorage.getItem("taskSession");
+
+        if (savedTasks) {
+            setTasks(JSON.parse(savedTasks));
+        }
 
         if (savedSession) {
             setSession(JSON.parse(savedSession));
         }
+
+        setLoaded(true);
     }, []);
+
+    useEffect(() => {
+        if (!loaded) {
+            return;
+        }
+
+        localStorage.setItem(
+            "tasks",
+            JSON.stringify(tasks)
+        );
+    }, [tasks, loaded]);
+
+    useEffect(() => {
+        if (!loaded) {
+            return;
+        }
+
+        if (session) {
+            localStorage.setItem(
+                "taskSession",
+                JSON.stringify(session)
+            );
+        }
+    }, [session, loaded]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -28,145 +59,51 @@ export default function CreateTask() {
         return () => clearInterval(interval);
     }, []);
 
-    useEffect(() => {
-        if (session) {
-            localStorage.setItem(
-                "taskSession",
-                JSON.stringify(session)
-            );
-        }
-    }, [session]);
-
-    async function loadTasks() {
-        try {
-            const token = localStorage.getItem("token");
-
-            if (!token) {
-                alert("Please login first.");
-                setLoading(false);
-                return;
-            }
-
-            const response = await fetch(
-                `${API_URL}/api/tasks`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                alert(data.message || "Failed to load tasks");
-                setLoading(false);
-                return;
-            }
-
-            const formattedTasks = data.map(task => ({
-                id: task.task_id,
-                text: task.task_text,
-                date: task.task_date,
-                submitted: task.submitted,
-                completed: task.completed,
-                editing: false
-            }));
-
-            setTasks(formattedTasks);
-        } catch (error) {
-            console.error("LOAD TASKS ERROR:", error);
-            alert("Unable to connect to server.");
-        } finally {
-            setLoading(false);
-        }
-    }
-
     const todayTasks = tasks.filter(
-        task => task.date === today
+        (task) => task.date === today
     );
 
     const todaySession =
         session?.date === today ? session : null;
 
-    const sessionStarted =
-        !!todaySession?.startTime;
+    const sessionStarted = !!todaySession?.startTime;
 
-    const sessionFinished =
-        !!todaySession?.completedAt;
+    const sessionFinished = !!todaySession?.completedAt;
 
-        async function addTask() {
-            if (sessionStarted) {
-                return;
-            }
-        
-            try {
-                const token = localStorage.getItem("token");
-        
-                if (!token) {
-                    alert("Please login first.");
-                    return;
-                }
-        
-                const response = await fetch(
-                    `${API_URL}/api/tasks`,
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            task_text: "New Task",
-                            task_date: today
-                        })
-                    }
-                );
-        
-                const data = await response.json();
-        
-                if (!response.ok) {
-                    alert(data.message || "Failed to create task");
-                    return;
-                }
-        
-                const serverTask = data.task;
-        
-                setTasks(prev => [
-                    ...prev,
-                    {
-                        id: serverTask.task_id,
-                        text: serverTask.task_text,
-                        date: serverTask.task_date,
-                        submitted: serverTask.submitted,
-                        completed: serverTask.completed,
-                        editing: true
-                    }
-                ]);
-        
-            } catch (error) {
-                console.error("CREATE TASK ERROR:", error);
-                alert("Unable to connect to server.");
-            }
+    function addTask() {
+        if (sessionStarted) {
+            alert("Today's session has already started.");
+            return;
         }
 
+        const newTask = {
+            id: crypto.randomUUID(),
+            text: "",
+            date: today,
+            submitted: false,
+            completed: false,
+            editing: true,
+        };
+
+        setTasks((prev) => [...prev, newTask]);
+    }
+
     function updateTask(id, value) {
-        setTasks(prev =>
-            prev.map(task =>
+        setTasks((prev) =>
+            prev.map((task) =>
                 task.id === id
                     ? {
-                        ...task,
-                        text: value
-                    }
+                          ...task,
+                          text: value,
+                      }
                     : task
             )
         );
     }
 
-    async function submitTask(id) {
+    function submitTask(id) {
         const task = todayTasks.find(
-            task => task.id === id
+            (task) => task.id === id
         );
 
         if (!task?.text.trim()) {
@@ -174,51 +111,18 @@ export default function CreateTask() {
             return;
         }
 
-        try {
-            const token = localStorage.getItem("token");
-
-            const response = await fetch(
-                `${API_URL}/api/tasks`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        task_text: task.text.trim(),
-                        task_date: today
-                    })
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                alert(data.message || "Failed to create task");
-                return;
-            }
-
-            const serverTask = data.task;
-
-            setTasks(prev =>
-                prev.map(task =>
-                    task.id === id
-                        ? {
-                            id: serverTask.task_id,
-                            text: serverTask.task_text,
-                            date: serverTask.task_date,
-                            submitted: serverTask.submitted,
-                            completed: serverTask.completed,
-                            editing: false
-                        }
-                        : task
-                )
-            );
-        } catch (error) {
-            console.error("CREATE TASK ERROR:", error);
-            alert("Unable to connect to server.");
-        }
+        setTasks((prev) =>
+            prev.map((task) =>
+                task.id === id
+                    ? {
+                          ...task,
+                          text: task.text.trim(),
+                          submitted: true,
+                          editing: false,
+                      }
+                    : task
+            )
+        );
     }
 
     function editTask(id) {
@@ -226,21 +130,22 @@ export default function CreateTask() {
             return;
         }
 
-        setTasks(prev =>
-            prev.map(task =>
+        setTasks((prev) =>
+            prev.map((task) =>
                 task.id === id
                     ? {
-                        ...task,
-                        editing: true
-                    }
+                          ...task,
+                          editing: true,
+                          submitted: false,
+                      }
                     : task
             )
         );
     }
 
-    async function saveTask(id) {
+    function saveTask(id) {
         const task = todayTasks.find(
-            task => task.id === id
+            (task) => task.id === id
         );
 
         if (!task?.text.trim()) {
@@ -248,99 +153,28 @@ export default function CreateTask() {
             return;
         }
 
-        try {
-            const token = localStorage.getItem("token");
-
-            const response = await fetch(
-                `${API_URL}/api/tasks/${id}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        task_text: task.text.trim()
-                    })
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                alert(data.message || "Failed to update task");
-                return;
-            }
-
-            const updatedTask = data.task;
-
-            setTasks(prev =>
-                prev.map(task =>
-                    task.id === id
-                        ? {
-                            ...task,
-                            text: updatedTask.task_text,
-                            submitted: updatedTask.submitted,
-                            completed: updatedTask.completed,
-                            editing: false
-                        }
-                        : task
-                )
-            );
-        } catch (error) {
-            console.error("UPDATE TASK ERROR:", error);
-            alert("Unable to connect to server.");
-        }
+        setTasks((prev) =>
+            prev.map((task) =>
+                task.id === id
+                    ? {
+                          ...task,
+                          text: task.text.trim(),
+                          submitted: true,
+                          editing: false,
+                      }
+                    : task
+            )
+        );
     }
 
-    async function deleteTask(id) {
+    function deleteTask(id) {
         if (sessionStarted) {
             return;
         }
 
-        if (String(id).startsWith("temp-")) {
-            setTasks(prev =>
-                prev.filter(task => task.id !== id)
-            );
-
-            return;
-        }
-
-        const confirmDelete = window.confirm(
-            "Delete this task?"
+        setTasks((prev) =>
+            prev.filter((task) => task.id !== id)
         );
-
-        if (!confirmDelete) {
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem("token");
-
-            const response = await fetch(
-                `${API_URL}/api/tasks/${id}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                alert(data.message || "Failed to delete task");
-                return;
-            }
-
-            setTasks(prev =>
-                prev.filter(task => task.id !== id)
-            );
-        } catch (error) {
-            console.error("DELETE TASK ERROR:", error);
-            alert("Unable to connect to server.");
-        }
     }
 
     function startSession() {
@@ -350,11 +184,13 @@ export default function CreateTask() {
         }
 
         const unsubmittedTask = todayTasks.some(
-            task => !task.submitted
+            (task) => !task.submitted
         );
 
         if (unsubmittedTask) {
-            alert("Please submit all tasks before starting.");
+            alert(
+                "Please submit all tasks before starting."
+            );
             return;
         }
 
@@ -366,66 +202,31 @@ export default function CreateTask() {
             return;
         }
 
-        const newSession = {
+        setSession({
             date: today,
             startTime: Date.now(),
-            completedAt: null
-        };
-
-        setSession(newSession);
+            completedAt: null,
+        });
     }
 
-    async function completeTask(id) {
-        if (!todaySession?.startTime || sessionFinished) {
+    function completeTask(id) {
+        if (
+            !todaySession?.startTime ||
+            sessionFinished
+        ) {
             return;
         }
 
-        const task = todayTasks.find(
-            task => task.id === id
+        setTasks((prev) =>
+            prev.map((task) =>
+                task.id === id
+                    ? {
+                          ...task,
+                          completed: !task.completed,
+                      }
+                    : task
+            )
         );
-
-        if (!task) {
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem("token");
-
-            const response = await fetch(
-                `${API_URL}/api/tasks/${id}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        completed: !task.completed
-                    })
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                alert(data.message || "Failed to update task");
-                return;
-            }
-
-            setTasks(prev =>
-                prev.map(task =>
-                    task.id === id
-                        ? {
-                            ...task,
-                            completed: !task.completed
-                        }
-                        : task
-                )
-            );
-        } catch (error) {
-            console.error("COMPLETE TASK ERROR:", error);
-            alert("Unable to connect to server.");
-        }
     }
 
     useEffect(() => {
@@ -435,13 +236,13 @@ export default function CreateTask() {
             todayTasks.length > 0
         ) {
             const allCompleted = todayTasks.every(
-                task => task.completed
+                (task) => task.completed
             );
 
             if (allCompleted) {
-                setSession(prev => ({
+                setSession((prev) => ({
                     ...prev,
-                    completedAt: Date.now()
+                    completedAt: Date.now(),
                 }));
             }
         }
@@ -449,7 +250,7 @@ export default function CreateTask() {
         tasks,
         sessionStarted,
         sessionFinished,
-        todayTasks.length
+        todayTasks.length,
     ]);
 
     function getElapsedTime() {
@@ -458,7 +259,8 @@ export default function CreateTask() {
         }
 
         const endTime =
-            todaySession.completedAt || currentTime;
+            todaySession.completedAt ||
+            currentTime;
 
         return Math.floor(
             (endTime - todaySession.startTime) / 1000
@@ -466,7 +268,9 @@ export default function CreateTask() {
     }
 
     function formatTime(seconds) {
-        const hours = Math.floor(seconds / 3600);
+        const hours = Math.floor(
+            seconds / 3600
+        );
 
         const minutes = Math.floor(
             (seconds % 3600) / 60
@@ -474,31 +278,31 @@ export default function CreateTask() {
 
         const secs = seconds % 60;
 
-        return `${String(hours).padStart(2, "0")}:${String(
-            minutes
-        ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+        return `${String(hours).padStart(
+            2,
+            "0"
+        )}:${String(minutes).padStart(
+            2,
+            "0"
+        )}:${String(secs).padStart(
+            2,
+            "0"
+        )}`;
     }
 
     const completedTasks = todayTasks.filter(
-        task => task.completed
+        (task) => task.completed
     ).length;
-
-    if (loading) {
-        return (
-            <div className="create-task-page">
-                <div className="task-container">
-                    <div className="empty-task">
-                        <h2>Loading tasks...</h2>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="create-task-page">
-
             <div className="create-task-header">
+                <Link
+                    to="/"
+                    className="home-button"
+                >
+                    Home
+                </Link>
 
                 <div>
                     <p className="small-title">
@@ -507,7 +311,7 @@ export default function CreateTask() {
                             {
                                 weekday: "long",
                                 day: "numeric",
-                                month: "long"
+                                month: "long",
                             }
                         )}
                     </p>
@@ -521,51 +325,40 @@ export default function CreateTask() {
 
                 <div className="task-progress">
                     <span>
-                        {completedTasks}/{todayTasks.length}
+                        {completedTasks}/
+                        {todayTasks.length}
                     </span>
 
                     <small>
-                        {" "}completed
+                        {" "}
+                        completed
                     </small>
                 </div>
-
             </div>
 
             <div className="task-container">
-
                 {todayTasks.length === 0 ? (
-
                     <div className="empty-task">
-
-                        <div className="empty-icon">
-                            📝
-                        </div>
-
                         <h2>No tasks yet</h2>
 
                         <p>
-                            Create your first task to start
-                            today's session.
+                            Create your first task
+                            to start today's session.
                         </p>
 
                         <button
+                            type="button"
                             className="primary-button"
                             onClick={addTask}
                         >
                             + Create Task
                         </button>
-
                     </div>
-
                 ) : (
-
                     <>
-
                         <div className="task-list">
-
                             {todayTasks.map(
                                 (task, index) => (
-
                                     <div
                                         className={`task-item ${
                                             task.completed
@@ -574,19 +367,18 @@ export default function CreateTask() {
                                         }`}
                                         key={task.id}
                                     >
-
                                         <div className="task-number">
                                             {index + 1}
                                         </div>
 
                                         <div className="task-content">
-
                                             {task.editing ? (
-
                                                 <input
                                                     type="text"
-                                                    value={task.text}
-                                                    onChange={e =>
+                                                    value={
+                                                        task.text
+                                                    }
+                                                    onChange={(e) =>
                                                         updateTask(
                                                             task.id,
                                                             e.target.value
@@ -595,46 +387,48 @@ export default function CreateTask() {
                                                     placeholder="What do you want to accomplish?"
                                                     autoFocus
                                                 />
-
                                             ) : (
-
                                                 <span>
-                                                    {task.text}
+                                                    {
+                                                        task.text
+                                                    }
                                                 </span>
-
                                             )}
 
                                             {!task.editing && (
                                                 <small>
                                                     {task.completed
                                                         ? "Completed"
-                                                        : "Ready to work"}
+                                                        : task.submitted
+                                                        ? "Ready to work"
+                                                        : "Draft"}
                                                 </small>
                                             )}
-
                                         </div>
 
                                         <div className="task-actions">
-
                                             {task.editing && (
-
                                                 <button
+                                                    type="button"
                                                     className="save-button"
                                                     onClick={() =>
-                                                        task.id.toString().startsWith("temp-")
-                                                            ? submitTask(task.id)
-                                                            : saveTask(task.id)
+                                                        task.submitted
+                                                            ? saveTask(
+                                                                  task.id
+                                                              )
+                                                            : submitTask(
+                                                                  task.id
+                                                              )
                                                     }
                                                 >
                                                     Save
                                                 </button>
-
                                             )}
 
                                             {!task.editing &&
                                                 !sessionStarted && (
-
                                                     <button
+                                                        type="button"
                                                         className="edit-button"
                                                         onClick={() =>
                                                             editTask(
@@ -644,12 +438,10 @@ export default function CreateTask() {
                                                     >
                                                         Edit
                                                     </button>
-
                                                 )}
 
                                             {!task.editing &&
                                                 sessionStarted && (
-
                                                     <input
                                                         type="checkbox"
                                                         checked={
@@ -664,12 +456,11 @@ export default function CreateTask() {
                                                             sessionFinished
                                                         }
                                                     />
-
                                                 )}
 
                                             {!sessionStarted && (
-
                                                 <button
+                                                    type="button"
                                                     className="delete-button"
                                                     onClick={() =>
                                                         deleteTask(
@@ -679,51 +470,42 @@ export default function CreateTask() {
                                                 >
                                                     ×
                                                 </button>
-
                                             )}
-
                                         </div>
-
                                     </div>
-
                                 )
                             )}
-
                         </div>
 
                         {!sessionStarted && (
-
                             <button
+                                type="button"
                                 className="add-task-button"
                                 onClick={addTask}
                             >
                                 +
                             </button>
-
                         )}
 
                         <div className="session-section">
-
                             {!sessionStarted && (
-
                                 <button
+                                    type="button"
                                     className="start-button"
-                                    onClick={startSession}
+                                    onClick={
+                                        startSession
+                                    }
                                 >
                                     Start Today's Session
                                 </button>
-
                             )}
 
                             {sessionStarted &&
                                 !sessionFinished && (
-
                                     <div className="working-box">
-
                                         <span className="status-dot"></span>
 
                                         <div>
-
                                             <strong>
                                                 Working...
                                             </strong>
@@ -733,23 +515,15 @@ export default function CreateTask() {
                                                     getElapsedTime()
                                                 )}
                                             </p>
-
                                         </div>
-
                                     </div>
-
                                 )}
 
                             {sessionFinished && (
-
                                 <div className="completed-box">
-
-                                    <span>
-                                        ✓
-                                    </span>
+                                    <span>✓</span>
 
                                     <div>
-
                                         <strong>
                                             Day Completed
                                         </strong>
@@ -760,21 +534,13 @@ export default function CreateTask() {
                                                 getElapsedTime()
                                             )}
                                         </p>
-
                                     </div>
-
                                 </div>
-
                             )}
-
                         </div>
-
                     </>
-
                 )}
-
             </div>
-
         </div>
     );
 }
