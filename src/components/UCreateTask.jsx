@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function UcreateTask() {
   const [tasks, setTasks] = useState([]);
-
+  const navigate = useNavigate();
   function Taskinput() {
     setTasks([
       ...tasks,

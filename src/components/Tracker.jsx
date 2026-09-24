@@ -9,6 +9,20 @@ export default function Tracker() {
   const [suggestions, setSuggestions] = useState("");
   const [showReview, setShowReview] = useState(false);
 
+  const [currentTime, setCurrentTime] = useState(
+    new Date()
+  );
+
+  // Real clock
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Load today's tasks
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
 
@@ -61,7 +75,9 @@ export default function Tracker() {
   const progress =
     totalTasks === 0
       ? 0
-      : Math.round((completedTasks / totalTasks) * 100);
+      : Math.round(
+          (completedTasks / totalTasks) * 100
+        );
 
   const score = completedTasks * 10;
 
@@ -69,7 +85,9 @@ export default function Tracker() {
     const today = new Date().toISOString().split("T")[0];
 
     const trackerData =
-      JSON.parse(localStorage.getItem("trackerData")) || {};
+      JSON.parse(
+        localStorage.getItem("trackerData")
+      ) || {};
 
     trackerData[today] = {
       tasks,
@@ -83,96 +101,122 @@ export default function Tracker() {
       JSON.stringify(trackerData)
     );
 
-    alert("Your today's tracker data has been saved.");
+    alert("Today's data saved.");
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 px-4 py-8">
+    <div className="min-h-screen bg-gray-100">
 
-      <div className="mx-auto max-w-3xl">
+      {/* TOP BAR */}
+      <header className="border-b bg-white">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+
+          {/* Date */}
+          <div>
+            <p className="text-sm text-gray-500">
+              {currentTime.toLocaleDateString(
+                "en-IN",
+                {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                }
+              )}
+            </p>
+
+            <p className="text-2xl font-semibold text-gray-900">
+              {currentTime.toLocaleTimeString(
+                "en-IN",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                }
+              )}
+            </p>
+          </div>
+
+          {/* Score */}
+          <div className="text-right">
+            <p className="text-xs uppercase tracking-wide text-gray-500">
+              Score
+            </p>
+
+            <p className="text-2xl font-semibold text-gray-900">
+              {score}
+            </p>
+          </div>
+
+        </div>
+      </header>
+
+
+      {/* MAIN */}
+      <main className="mx-auto max-w-4xl px-6 py-8">
 
         {/* Reminder */}
-        <div className="mb-6 rounded-xl bg-yellow-100 p-5">
-          <h2 className="text-xl font-bold text-yellow-900">
-            🔔 Today's Reminder
-          </h2>
+        <div className="mb-6">
+          <p className="text-sm text-gray-500">
+            Reminder
+          </p>
 
-          <p className="mt-2 text-yellow-800">
-            Stay focused and complete your tasks one step
-            at a time.
+          <p className="mt-1 text-lg text-gray-800">
+            Focus on one task at a time.
           </p>
         </div>
 
-        {/* Header */}
-        <div className="rounded-2xl bg-white p-6 shadow">
 
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">
-                Today's Tracker
-              </h1>
+        {/* Progress */}
+        <div className="mb-8 rounded-xl border bg-white p-6">
 
-              <p className="mt-1 text-gray-500">
-                Keep moving forward.
-              </p>
-            </div>
+          <div className="mb-3 flex justify-between">
 
-            <div className="text-right">
-              <p className="text-sm text-gray-500">
-                Score
-              </p>
+            <span className="font-medium">
+              Today's progress
+            </span>
 
-              <p className="text-3xl font-bold text-green-600">
-                {score}
-              </p>
-            </div>
-          </div>
-
-          {/* Progress */}
-          <div className="mt-6">
-
-            <div className="mb-2 flex justify-between text-sm">
-              <span>Progress</span>
-
-              <span>
-                {completedTasks}/{totalTasks} completed
-              </span>
-            </div>
-
-            <div className="h-4 overflow-hidden rounded-full bg-gray-200">
-              <div
-                className="h-full rounded-full bg-green-500 transition-all"
-                style={{
-                  width: `${progress}%`,
-                }}
-              />
-            </div>
-
-            <p className="mt-2 text-right text-sm text-gray-500">
-              {progress}%
-            </p>
+            <span className="text-sm text-gray-500">
+              {completedTasks} / {totalTasks}
+            </span>
 
           </div>
+
+          <div className="h-2 rounded-full bg-gray-200">
+
+            <div
+              className="h-2 rounded-full bg-green-600 transition-all"
+              style={{
+                width: `${progress}%`,
+              }}
+            />
+
+          </div>
+
+          <p className="mt-2 text-right text-sm text-gray-500">
+            {progress}%
+          </p>
+
         </div>
 
-        {/* Tasks */}
-        <div className="mt-6 space-y-3">
+
+        {/* TASKS */}
+        <div className="space-y-3">
 
           {tasks.map((task, index) => (
+
             <div
               key={task.id}
-              className={`flex items-center gap-4 rounded-xl bg-white p-5 shadow ${
-                task.completed
-                  ? "opacity-60"
-                  : ""
-              }`}
+              className="flex items-center gap-4 rounded-xl border bg-white px-5 py-4"
             >
 
               {/* Checkbox */}
               <input
                 type="checkbox"
                 checked={task.completed}
-                onChange={() => toggleTask(index)}
+                onChange={() =>
+                  toggleTask(index)
+                }
                 className="h-5 w-5"
               />
 
@@ -180,47 +224,51 @@ export default function Tracker() {
               <div className="flex-1">
 
                 <p
-                  className={`font-medium ${
+                  className={
                     task.completed
-                      ? "line-through text-gray-400"
+                      ? "text-gray-400 line-through"
                       : "text-gray-900"
-                  }`}
+                  }
                 >
                   {task.task}
                 </p>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  Duration: {task.duration} {task.unit}
+                  {task.duration} {task.unit}
                 </p>
 
               </div>
 
               {/* Score */}
-              <div className="text-sm font-semibold text-green-600">
+              <span className="text-sm text-gray-500">
                 +10
-              </div>
+              </span>
 
             </div>
+
           ))}
 
         </div>
 
-        {/* Completed */}
-        {showReview && (
-          <div className="mt-8 rounded-2xl bg-white p-6 shadow">
 
-            <h2 className="text-2xl font-bold">
-              🎉 You completed today's tasks!
+        {/* COMPLETED */}
+        {showReview && (
+
+          <div className="mt-8 rounded-xl border bg-white p-6">
+
+            <h2 className="text-xl font-semibold">
+              Day completed
             </h2>
 
-            <p className="mt-2 text-gray-600">
+            <p className="mt-1 text-gray-500">
               You earned {score} points today.
             </p>
+
 
             {/* Review */}
             <div className="mt-6">
 
-              <label className="font-medium">
+              <label className="text-sm font-medium">
                 How was your day?
               </label>
 
@@ -229,18 +277,19 @@ export default function Tracker() {
                 onChange={(e) =>
                   setReview(e.target.value)
                 }
-                placeholder="Write your review..."
-                className="mt-2 w-full rounded-lg border p-3 outline-none focus:border-blue-500"
                 rows="4"
+                className="mt-2 w-full rounded-lg border p-3 outline-none focus:border-gray-500"
+                placeholder="Write a few words..."
               />
 
             </div>
 
+
             {/* Suggestions */}
             <div className="mt-5">
 
-              <label className="font-medium">
-                Any suggestions?
+              <label className="text-sm font-medium">
+                Suggestions
               </label>
 
               <textarea
@@ -248,46 +297,51 @@ export default function Tracker() {
                 onChange={(e) =>
                   setSuggestions(e.target.value)
                 }
-                placeholder="Tell us how we can improve..."
-                className="mt-2 w-full rounded-lg border p-3 outline-none focus:border-blue-500"
                 rows="4"
+                className="mt-2 w-full rounded-lg border p-3 outline-none focus:border-gray-500"
+                placeholder="Anything you'd like to change?"
               />
 
             </div>
 
+
             {/* Signup */}
-            <div className="mt-6 rounded-xl bg-gray-100 p-5">
+            <div className="mt-6 border-t pt-6">
 
-              <h3 className="text-lg font-bold">
-                🔓 Unlock your tracker
-              </h3>
+              <p className="font-medium">
+                Want to keep your progress?
+              </p>
 
-              <p className="mt-2 text-sm text-gray-600">
-                Sign up to permanently save your daily
-                progress, scores and reviews.
+              <p className="mt-1 text-sm text-gray-500">
+                Create an account to save your tracker
+                history and access it later.
               </p>
 
               <button
-                onClick={() => navigate("/register")}
-                className="mt-4 rounded-lg bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700"
+                onClick={() =>
+                  navigate("/register")
+                }
+                className="mt-4 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
               >
-                Sign Up & Save Tracker
+                Create account
               </button>
 
             </div>
 
-            {/* Temporary local save */}
+
             <button
               onClick={saveReview}
-              className="mt-4 w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+              className="mt-3 rounded-lg border px-5 py-2.5 text-sm font-medium hover:bg-gray-50"
             >
-              Save Today's Data
+              Save locally
             </button>
 
           </div>
+
         )}
 
-      </div>
+      </main>
+
     </div>
   );
 }
