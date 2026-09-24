@@ -9,18 +9,31 @@ export default function Tracker() {
   const [suggestions, setSuggestions] = useState("");
   const [showReview, setShowReview] = useState(false);
 
-  const [currentTime, setCurrentTime] = useState(
-    new Date()
-  );
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Real clock
+  // Timer: seconds elapsed since opening tracker
+  const [elapsedTime, setElapsedTime] = useState(0);
+
+  // Real clock + timer
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
+      setElapsedTime((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
+
+  // Format timer as HH:MM:SS
+  function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    return `${String(hours).padStart(2, "0")}:${String(
+      minutes
+    ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
 
   // Load today's tasks
   useEffect(() => {
@@ -94,6 +107,7 @@ export default function Tracker() {
       score,
       review,
       suggestions,
+      elapsedTime,
     };
 
     localStorage.setItem(
@@ -111,7 +125,7 @@ export default function Tracker() {
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
 
-          {/* Date */}
+          {/* Date + Clock */}
           <div>
             <p className="text-sm text-gray-500">
               {currentTime.toLocaleDateString(
@@ -137,6 +151,17 @@ export default function Tracker() {
             </p>
           </div>
 
+          {/* Timer */}
+          <div className="text-center">
+            <p className="text-xs uppercase tracking-wide text-gray-500">
+              Timer
+            </p>
+
+            <p className="text-2xl font-semibold text-gray-900 tabular-nums">
+              {formatTime(elapsedTime)}
+            </p>
+          </div>
+
           {/* Score */}
           <div className="text-right">
             <p className="text-xs uppercase tracking-wide text-gray-500">
@@ -151,7 +176,6 @@ export default function Tracker() {
         </div>
       </header>
 
-
       {/* MAIN */}
       <main className="mx-auto max-w-4xl px-6 py-8">
 
@@ -165,7 +189,6 @@ export default function Tracker() {
             Focus on one task at a time.
           </p>
         </div>
-
 
         {/* Progress */}
         <div className="mb-8 rounded-xl border bg-white p-6">
@@ -199,7 +222,6 @@ export default function Tracker() {
 
         </div>
 
-
         {/* TASKS */}
         <div className="space-y-3">
 
@@ -210,7 +232,6 @@ export default function Tracker() {
               className="flex items-center gap-4 rounded-xl border bg-white px-5 py-4"
             >
 
-              {/* Checkbox */}
               <input
                 type="checkbox"
                 checked={task.completed}
@@ -220,7 +241,6 @@ export default function Tracker() {
                 className="h-5 w-5"
               />
 
-              {/* Task */}
               <div className="flex-1">
 
                 <p
@@ -239,7 +259,6 @@ export default function Tracker() {
 
               </div>
 
-              {/* Score */}
               <span className="text-sm text-gray-500">
                 +10
               </span>
@@ -249,7 +268,6 @@ export default function Tracker() {
           ))}
 
         </div>
-
 
         {/* COMPLETED */}
         {showReview && (
@@ -263,7 +281,6 @@ export default function Tracker() {
             <p className="mt-1 text-gray-500">
               You earned {score} points today.
             </p>
-
 
             {/* Review */}
             <div className="mt-6">
@@ -284,7 +301,6 @@ export default function Tracker() {
 
             </div>
 
-
             {/* Suggestions */}
             <div className="mt-5">
 
@@ -303,7 +319,6 @@ export default function Tracker() {
               />
 
             </div>
-
 
             {/* Signup */}
             <div className="mt-6 border-t pt-6">
@@ -327,7 +342,6 @@ export default function Tracker() {
               </button>
 
             </div>
-
 
             <button
               onClick={saveReview}
