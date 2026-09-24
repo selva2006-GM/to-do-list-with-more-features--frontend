@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 export default function UcreateTask() {
   const [tasks, setTasks] = useState([]);
   const navigate = useNavigate();
+
   function Taskinput() {
     setTasks([
       ...tasks,
@@ -40,10 +41,10 @@ export default function UcreateTask() {
 
   function savedata() {
     const today = new Date().toISOString().split("T")[0];
-  
+
     const existingData =
       JSON.parse(localStorage.getItem("tasks")) || {};
-  
+
     existingData[today] = tasks.map((task, index) => ({
       id: index + 1,
       task: task.task,
@@ -51,12 +52,12 @@ export default function UcreateTask() {
       unit: task.unit,
       completed: false,
     }));
-  
+
     localStorage.setItem(
       "tasks",
       JSON.stringify(existingData)
     );
-  
+
     navigate("/tracker");
   }
 
@@ -64,6 +65,16 @@ export default function UcreateTask() {
     <div className="min-h-screen bg-gray-100 px-4 py-10">
       <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-lg">
 
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+        >
+          <span className="text-lg">←</span>
+          Back
+        </button>
+
+        {/* Heading */}
         <h1 className="text-3xl font-bold text-gray-900">
           Create Tasks
         </h1>
@@ -72,6 +83,7 @@ export default function UcreateTask() {
           Add tasks and set their duration.
         </p>
 
+        {/* Add Task */}
         <button
           onClick={Taskinput}
           className="mb-6 rounded-lg bg-green-600 px-5 py-2.5 font-semibold text-white hover:bg-green-700"
@@ -79,13 +91,13 @@ export default function UcreateTask() {
           + Add Task
         </button>
 
+        {/* Tasks */}
         <div className="space-y-4">
           {tasks.map((task, index) => (
             <div
               key={index}
               className="flex items-center gap-3 rounded-xl border border-gray-200 p-4"
             >
-              {/* Task */}
               <input
                 type="text"
                 value={task.task}
@@ -96,7 +108,6 @@ export default function UcreateTask() {
                 className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
               />
 
-              {/* Duration */}
               <input
                 type="number"
                 min="1"
@@ -108,7 +119,6 @@ export default function UcreateTask() {
                 className="w-28 rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
               />
 
-              {/* Unit */}
               <select
                 value={task.unit}
                 onChange={(e) =>
@@ -120,7 +130,6 @@ export default function UcreateTask() {
                 <option value="hours">Hours</option>
               </select>
 
-              {/* Delete */}
               <button
                 onClick={() => discardTask(index)}
                 title="Discard task"
@@ -134,7 +143,7 @@ export default function UcreateTask() {
 
         {tasks.length === 0 && (
           <p className="mt-4 rounded-lg border border-dashed border-gray-300 p-6 text-center text-gray-500">
-            No tasks added yet.
+            No tasks added yet. 
           </p>
         )}
 

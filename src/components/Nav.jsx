@@ -83,13 +83,23 @@ export default function Nav() {
               Reset
             </button>
           )}
-
-          <Link
+          {!logged && (
+            <Link
             to="/ucreatetask"
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-900"
           >
             Create Task
           </Link>
+          )}
+          {logged && (
+             <Link
+             to="/createtask"
+             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-900"
+           >
+             Create Task
+           </Link>
+          )}
+          
         </div>
       </div>
     </nav>

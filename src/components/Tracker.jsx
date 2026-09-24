@@ -102,6 +102,14 @@ export default function Tracker() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* TOP BAR */}
+      {/* Back Button */}
+<button
+  onClick={() => navigate(-1)}
+  className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+>
+  <span className="text-lg">←</span>
+  Back
+</button>
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           {/* Date + Clock */}
