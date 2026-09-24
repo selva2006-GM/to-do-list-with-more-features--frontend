@@ -65,71 +65,148 @@ export default function Register() {
     }
 
     return (
-        <div className="auth-container">
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
 
-            <form
-                className="auth-form"
-                onSubmit={register}
-            >
+            <div className="w-full max-w-md">
 
-                <h1>Register</h1>
+                {/* Register Card */}
+                <form
+                    onSubmit={register}
+                    className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm"
+                >
 
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) =>
-                        setUsername(e.target.value)
-                    }
-                    autoComplete="username"
-                    required
-                />
+                    {/* Heading */}
+                    <div className="mb-7">
+                        <h1 className="text-2xl font-semibold text-gray-900">
+                            Create an account
+                        </h1>
 
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) =>
-                        setEmail(e.target.value)
-                    }
-                    autoComplete="email"
-                    required
-                />
+                        <p className="mt-2 text-sm text-gray-500">
+                            Create your account to start tracking your progress.
+                        </p>
+                    </div>
 
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) =>
-                        setPassword(e.target.value)
-                    }
-                    autoComplete="new-password"
-                    required
-                />
 
-                <input
-                    type="password"
-                    placeholder="Confirm Password"
-                    value={confirmPassword}
-                    onChange={(e) =>
-                        setConfirmPassword(e.target.value)
-                    }
-                    autoComplete="new-password"
-                    required
-                />
+                    {/* Username */}
+                    <div className="mb-4">
+                        <label
+                            htmlFor="username"
+                            className="block mb-2 text-sm font-medium text-gray-700"
+                        >
+                            Username
+                        </label>
 
-                <button type="submit">
-                    Register
-                </button>
+                        <input
+                            id="username"
+                            type="text"
+                            placeholder="Enter your username"
+                            value={username}
+                            onChange={(e) =>
+                                setUsername(e.target.value)
+                            }
+                            autoComplete="username"
+                            required
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                        />
+                    </div>
 
-                <p>
-                    Already have an account?{" "}
-                    <Link to="/login">
-                        Login
-                    </Link>
-                </p>
 
-            </form>
+                    {/* Email */}
+                    <div className="mb-4">
+                        <label
+                            htmlFor="email"
+                            className="block mb-2 text-sm font-medium text-gray-700"
+                        >
+                            Email
+                        </label>
+
+                        <input
+                            id="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) =>
+                                setEmail(e.target.value)
+                            }
+                            autoComplete="email"
+                            required
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                        />
+                    </div>
+
+
+                    {/* Password */}
+                    <div className="mb-4">
+                        <label
+                            htmlFor="password"
+                            className="block mb-2 text-sm font-medium text-gray-700"
+                        >
+                            Password
+                        </label>
+
+                        <input
+                            id="password"
+                            type="password"
+                            placeholder="Create a password"
+                            value={password}
+                            onChange={(e) =>
+                                setPassword(e.target.value)
+                            }
+                            autoComplete="new-password"
+                            required
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                        />
+                    </div>
+
+
+                    {/* Confirm Password */}
+                    <div className="mb-6">
+                        <label
+                            htmlFor="confirmPassword"
+                            className="block mb-2 text-sm font-medium text-gray-700"
+                        >
+                            Confirm Password
+                        </label>
+
+                        <input
+                            id="confirmPassword"
+                            type="password"
+                            placeholder="Confirm your password"
+                            value={confirmPassword}
+                            onChange={(e) =>
+                                setConfirmPassword(e.target.value)
+                            }
+                            autoComplete="new-password"
+                            required
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                        />
+                    </div>
+
+
+                    {/* Register Button */}
+                    <button
+                        type="submit"
+                        className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950"
+                    >
+                        Register
+                    </button>
+
+
+                    {/* Login */}
+                    <p className="mt-6 text-center text-sm text-gray-500">
+                        Already have an account?{" "}
+
+                        <Link
+                            to="/login"
+                            className="font-medium text-gray-900 hover:underline"
+                        >
+                            Login
+                        </Link>
+                    </p>
+
+                </form>
+
+            </div>
 
         </div>
     );
