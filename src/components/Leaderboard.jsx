@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-
+import { Link } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Leaderboard() {
@@ -70,6 +70,12 @@ export default function Leaderboard() {
 
     return (
         <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <Link
+                    to="/dashboard"
+                    className="text-sm font-medium text-gray-600 hover:text-gray-900"
+                >
+                    ← Back to Dashboard
+                </Link>
 
             <div className="mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">

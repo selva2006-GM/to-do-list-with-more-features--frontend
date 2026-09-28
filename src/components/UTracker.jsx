@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Nav from "./Nav";
 import API_URL from "../config/api";
 
 export default function UTracker() {
@@ -13,11 +12,7 @@ export default function UTracker() {
   const [review, setReview] = useState("");
   const [showReview, setShowReview] = useState(false);
 
-  const today = new Date().toISOString().split("T")[0];
-
-  // =====================================================
-  // FETCH TODAY'S TASKS
-  // =====================================================
+  const today = new Date().toLocaleDateString("en-CA");
 
   useEffect(() => {
     async function getTasks() {
@@ -42,15 +37,15 @@ export default function UTracker() {
           throw new Error(data.message || "Failed to fetch tasks");
         }
 
-        console.log("TRACKER TASKS:", data);
-
-        const todayTasks = data.filter((task) => task.task_date === today);
+        const todayTasks = data.filter((task) => {
+          const taskDate = String(task.task_date).split("T")[0];
+          return taskDate === today;
+        });
 
         setTasks(todayTasks);
       } catch (error) {
         console.error("GET TRACKER TASKS ERROR:", error);
-
-        setError(error.message);
+        setError(error.message || "Failed to fetch tasks");
       } finally {
         setLoading(false);
       }
@@ -58,10 +53,6 @@ export default function UTracker() {
 
     getTasks();
   }, [navigate, today]);
-
-  // =====================================================
-  // TOGGLE TASK
-  // =====================================================
 
   const toggleTask = async (task) => {
     try {
@@ -74,10 +65,6 @@ export default function UTracker() {
 
       const newCompleted = !task.completed;
 
-      // ---------------------------------------------
-      // UPDATE UI IMMEDIATELY
-      // ---------------------------------------------
-
       setTasks((currentTasks) =>
         currentTasks.map((item) =>
           item.task_id === task.task_id
@@ -85,63 +72,56 @@ export default function UTracker() {
                 ...item,
                 completed: newCompleted,
               }
-            : item,
-        ),
+            : item
+        )
       );
 
-      // ---------------------------------------------
-      // UPDATE TASK IN DATABASE
-      // ---------------------------------------------
-
-      const response = await fetch(`${API_URL}/api/tasks/${task.task_id}`, {
-        method: "PUT",
-
-        headers: {
-          "Content-Type": "application/json",
-
-          Authorization: `Bearer ${token}`,
-        },
-
-        body: JSON.stringify({
-          completed: newCompleted,
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/api/tasks/${task.task_id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            completed: newCompleted,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to update task");
+        throw new Error(
+          data.message || "Failed to update task"
+        );
       }
 
-      console.log("TASK UPDATED:", data);
-
-      // ---------------------------------------------
-      // UPDATE SCORE
-      // ---------------------------------------------
-
-      const scoreResponse = await fetch(`${API_URL}/api/tasks/score`, {
-        method: "POST",
-
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const scoreResponse = await fetch(
+        `${API_URL}/api/tasks/score`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const scoreData = await scoreResponse.json();
 
       if (!scoreResponse.ok) {
-        throw new Error(scoreData.message || "Failed to update score");
+        throw new Error(
+          scoreData.message || "Failed to update score"
+        );
       }
 
+      console.log("TASK UPDATED:", data);
       console.log("SCORE UPDATED:", scoreData);
     } catch (error) {
       console.error("UPDATE TASK ERROR:", error);
 
-      setError(error.message);
-
-      // ---------------------------------------------
-      // RELOAD TASKS FROM SERVER
-      // ---------------------------------------------
+      setError(error.message || "Failed to update task");
 
       try {
         const token = localStorage.getItem("token");
@@ -154,79 +134,71 @@ export default function UTracker() {
 
         const data = await response.json();
 
-        const todayTasks = data.filter((task) => task.task_date === today);
+        const todayTasks = data.filter((task) => {
+          const taskDate = String(task.task_date).split("T")[0];
+          return taskDate === today;
+        });
 
         setTasks(todayTasks);
       } catch (reloadError) {
-        console.error("FAILED TO RELOAD TASKS:", reloadError);
+        console.error(
+          "FAILED TO RELOAD TASKS:",
+          reloadError
+        );
       }
     }
   };
 
-  // =====================================================
-  // CALCULATE PROGRESS
-  // =====================================================
-
-  const completedTasks = tasks.filter((task) => task.completed).length;
+  const completedTasks = tasks.filter(
+    (task) => task.completed
+  ).length;
 
   const totalTasks = tasks.length;
 
   const progress =
-    totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+    totalTasks === 0
+      ? 0
+      : Math.round(
+          (completedTasks / totalTasks) * 100
+        );
 
   const todayScore = completedTasks * 10;
 
-  // =====================================================
-  // SHOW REVIEW
-  // =====================================================
-
   useEffect(() => {
-    if (tasks.length > 0 && completedTasks === totalTasks) {
+    if (
+      tasks.length > 0 &&
+      completedTasks === totalTasks
+    ) {
       setShowReview(true);
     } else {
       setShowReview(false);
     }
   }, [completedTasks, totalTasks, tasks.length]);
 
-  // =====================================================
-  // SUBMIT REVIEW
-  // =====================================================
-
   const submitReview = () => {
-    console.log("REVIEW:", review);
-
-    localStorage.setItem(`review-${today}`, review);
+    localStorage.setItem(
+      `review-${today}`,
+      review
+    );
 
     setShowReview(false);
   };
 
-  // =====================================================
-  // LOADING
-  // =====================================================
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <Nav />
-
         <div className="flex min-h-[70vh] items-center justify-center">
-          <p className="text-gray-500">Loading your tasks...</p>
+          <p className="text-gray-500">
+            Loading your tasks...
+          </p>
         </div>
       </div>
     );
   }
 
-  // =====================================================
-  // UI
-  // =====================================================
-
   return (
     <div className="min-h-screen bg-gray-100">
-      <Nav />
-
       <main className="mx-auto max-w-3xl px-6 py-8">
-        {/* HEADER */}
-
         <div className="mb-8">
           <button
             onClick={() => navigate("/dashboard")}
@@ -235,7 +207,9 @@ export default function UTracker() {
             ← Back to dashboard
           </button>
 
-          <p className="text-sm text-gray-500">Daily Tracker</p>
+          <p className="text-sm text-gray-500">
+            Daily Tracker
+          </p>
 
           <h1 className="mt-1 text-3xl font-semibold text-gray-900">
             Today's Tasks
@@ -246,20 +220,18 @@ export default function UTracker() {
           </p>
         </div>
 
-        {/* ERROR */}
-
         {error && (
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
           </div>
         )}
 
-        {/* PROGRESS */}
-
         <div className="rounded-xl border border-gray-200 bg-white p-6">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-sm text-gray-500">Today's progress</p>
+              <p className="text-sm text-gray-500">
+                Today's progress
+              </p>
 
               <p className="mt-1 text-3xl font-semibold text-gray-900">
                 {progress}%
@@ -267,15 +239,15 @@ export default function UTracker() {
             </div>
 
             <div className="text-right">
-              <p className="text-sm text-gray-500">Tasks</p>
+              <p className="text-sm text-gray-500">
+                Tasks
+              </p>
 
               <p className="font-semibold text-gray-900">
                 {completedTasks} / {totalTasks}
               </p>
             </div>
           </div>
-
-          {/* PROGRESS BAR */}
 
           <div className="mt-5 h-3 overflow-hidden rounded-full bg-gray-200">
             <div
@@ -286,10 +258,10 @@ export default function UTracker() {
             />
           </div>
 
-          {/* SCORE */}
-
           <div className="mt-4 flex justify-between text-sm">
-            <span className="text-gray-500">Today's score</span>
+            <span className="text-gray-500">
+              Today's score
+            </span>
 
             <span className="font-semibold text-gray-900">
               {todayScore} points
@@ -297,17 +269,19 @@ export default function UTracker() {
           </div>
         </div>
 
-        {/* TASKS */}
-
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="font-semibold text-gray-900">Tasks</h2>
+          <h2 className="font-semibold text-gray-900">
+            Tasks
+          </h2>
 
           {tasks.length === 0 ? (
             <div className="mt-5 rounded-lg border border-dashed border-gray-300 p-8 text-center">
-              <p className="text-gray-500">No tasks for today.</p>
+              <p className="text-gray-500">
+                No tasks for today.
+              </p>
 
               <button
-                onClick={() => navigate("/create-task")}
+                onClick={() => navigate("/createtask")}
                 className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
               >
                 Create Task
@@ -326,7 +300,7 @@ export default function UTracker() {
                 >
                   <input
                     type="checkbox"
-                    checked={task.completed}
+                    checked={Boolean(task.completed)}
                     onChange={() => toggleTask(task)}
                     className="h-5 w-5 rounded"
                   />
@@ -345,10 +319,14 @@ export default function UTracker() {
 
                   <span
                     className={`text-sm ${
-                      task.completed ? "text-green-600" : "text-gray-400"
+                      task.completed
+                        ? "text-green-600"
+                        : "text-gray-400"
                     }`}
                   >
-                    {task.completed ? "Completed" : "Pending"}
+                    {task.completed
+                      ? "Completed"
+                      : "Pending"}
                   </span>
                 </label>
               ))}
@@ -356,21 +334,18 @@ export default function UTracker() {
           )}
         </div>
 
-        {/* COMPLETION */}
+        {tasks.length > 0 &&
+          completedTasks === totalTasks && (
+            <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-6">
+              <h2 className="font-semibold text-green-800">
+                🎉 All tasks completed!
+              </h2>
 
-        {tasks.length > 0 && completedTasks === totalTasks && (
-          <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-6">
-            <h2 className="font-semibold text-green-800">
-              🎉 All tasks completed!
-            </h2>
-
-            <p className="mt-1 text-sm text-green-700">
-              You earned {todayScore} points today.
-            </p>
-          </div>
-        )}
-
-        {/* REVIEW */}
+              <p className="mt-1 text-sm text-green-700">
+                You earned {todayScore} points today.
+              </p>
+            </div>
+          )}
 
         {showReview && (
           <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">

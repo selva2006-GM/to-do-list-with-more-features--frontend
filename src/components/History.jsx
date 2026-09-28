@@ -100,7 +100,6 @@ export default function History() {
 
     return (
         <div className="min-h-screen bg-gray-100">
-            <Nav />
 
             <main className="mx-auto max-w-4xl px-6 py-8">
 
