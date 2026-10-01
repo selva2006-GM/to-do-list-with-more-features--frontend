@@ -338,7 +338,7 @@ export default function UTracker() {
           completedTasks === totalTasks && (
             <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-6">
               <h2 className="font-semibold text-green-800">
-                🎉 All tasks completed!
+                 All tasks completed!
               </h2>
 
               <p className="mt-1 text-sm text-green-700">
@@ -347,32 +347,7 @@ export default function UTracker() {
             </div>
           )}
 
-        {showReview && (
-          <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-            <h2 className="text-lg font-semibold text-gray-900">
-              How was your day?
-            </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Leave a short review about today's tasks.
-            </p>
-
-            <textarea
-              value={review}
-              onChange={(e) => setReview(e.target.value)}
-              placeholder="What went well? What could be improved?"
-              rows={4}
-              className="mt-4 w-full resize-none rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
-            />
-
-            <button
-              onClick={submitReview}
-              className="mt-4 rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-800"
-            >
-              Submit Review
-            </button>
-          </div>
-        )}
+        
       </main>
     </div>
   );

@@ -13,8 +13,7 @@ export default function Home() {
 
   return (
     <>
-      <Nav />
-
+    <Nav/>
       {!token && (
         <main className="min-h-screen bg-gray-100">
           <section className="mx-auto max-w-6xl px-6 py-16">
