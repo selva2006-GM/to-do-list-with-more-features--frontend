@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../config/api";
+import Nav from "./Nav";
 
 export default function UTracker() {
   const navigate = useNavigate();
@@ -198,6 +199,7 @@ export default function UTracker() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+        <Nav/>
       <main className="mx-auto max-w-3xl px-6 py-8">
         <div className="mb-8">
           <button

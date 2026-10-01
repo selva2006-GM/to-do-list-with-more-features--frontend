@@ -199,8 +199,7 @@ export default function Heatmap() {
 
   return (
     <div >
-   
-
+        <Nav/>
       <main >
         <button
           onClick={() => navigate(-1)}
