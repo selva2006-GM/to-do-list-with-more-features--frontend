@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Nav from "./Nav";
 import API_URL from "../config/api";
+import Heatmapdash from "./Heatmapdash";
 import Heatmap from "./Heatmap";
-
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -406,7 +406,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="mt-6">
-          <Heatmap />
+          <Heatmapdash/>
         </div>
 
         {/* =====================================================

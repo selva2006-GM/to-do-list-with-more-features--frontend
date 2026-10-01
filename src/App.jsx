@@ -12,7 +12,7 @@ import History from "./components/History";
 import Leaderboard from "./components/Leaderboard";
 import CreateTask from "./components/CreateTask";
 import UTracker from "./components/UTracker";
-import Nav from "./components/Nav";
+import Heatmapdash from "./components/Heatmapdash";
 
 import { ThemeProvider } from "./ThemeContext";
 
@@ -29,6 +29,7 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/history" element={<History />} />
           <Route path="/heatmap" element={<Heatmap />} />
+          <Route path="/heatmapdash" element={<Heatmapdash />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/createtask" element={<CreateTask />} />
           <Route path="/utracker" element={<UTracker />} />
