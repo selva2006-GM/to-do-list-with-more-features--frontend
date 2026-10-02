@@ -10,11 +10,8 @@ export default function Tracker() {
   const [showReview, setShowReview] = useState(false);
 
   const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Timer: seconds elapsed since opening tracker
   const [elapsedTime, setElapsedTime] = useState(0);
 
-  // Real clock + timer
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -24,7 +21,6 @@ export default function Tracker() {
     return () => clearInterval(timer);
   }, []);
 
-  // Format timer as HH:MM:SS
   function formatTime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -32,11 +28,10 @@ export default function Tracker() {
 
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
       2,
-      "0",
+      "0"
     )}:${String(secs).padStart(2, "0")}`;
   }
 
-  // Load today's tasks
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
 
@@ -48,43 +43,58 @@ export default function Tracker() {
     }
 
     setTasks(savedTasks[today]);
+
+    const savedTrackerData =
+      JSON.parse(localStorage.getItem("trackerData")) || {};
+
+    if (savedTrackerData[today]) {
+      setReview(savedTrackerData[today].review || "");
+      setSuggestions(savedTrackerData[today].suggestions || "");
+    }
   }, [navigate]);
 
   function toggleTask(index) {
     const updatedTasks = [...tasks];
 
-    updatedTasks[index].completed = !updatedTasks[index].completed;
+    updatedTasks[index].completed =
+      !updatedTasks[index].completed;
 
     setTasks(updatedTasks);
 
     const today = new Date().toISOString().split("T")[0];
 
-    const savedTasks = JSON.parse(localStorage.getItem("tasks")) || {};
+    const savedTasks =
+      JSON.parse(localStorage.getItem("tasks")) || {};
 
     savedTasks[today] = updatedTasks;
 
     localStorage.setItem("tasks", JSON.stringify(savedTasks));
 
-    const completed = updatedTasks.every((task) => task.completed);
+    const completed = updatedTasks.every(
+      (task) => task.completed
+    );
 
-    if (completed) {
-      setShowReview(true);
-    }
+    setShowReview(completed);
   }
 
-  const completedTasks = tasks.filter((task) => task.completed).length;
+  const completedTasks = tasks.filter(
+    (task) => task.completed
+  ).length;
 
   const totalTasks = tasks.length;
 
   const progress =
-    totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+    totalTasks === 0
+      ? 0
+      : Math.round((completedTasks / totalTasks) * 100);
 
   const score = completedTasks * 10;
 
   function saveReview() {
     const today = new Date().toISOString().split("T")[0];
 
-    const trackerData = JSON.parse(localStorage.getItem("trackerData")) || {};
+    const trackerData =
+      JSON.parse(localStorage.getItem("trackerData")) || {};
 
     trackerData[today] = {
       tasks,
@@ -94,24 +104,21 @@ export default function Tracker() {
       elapsedTime,
     };
 
-    localStorage.setItem("trackerData", JSON.stringify(trackerData));
+    localStorage.setItem(
+      "trackerData",
+      JSON.stringify(trackerData)
+    );
 
     alert("Today's data saved.");
   }
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* TOP BAR */}
-      {/* Back Button */}
-<button
-  onClick={() => navigate(-1)}
-  className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
->
-  <span className="text-lg">←</span>
-  Back
-</button>
+
+      {/* HEADER */}
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+
           {/* Date + Clock */}
           <div>
             <p className="text-sm text-gray-500">
@@ -149,16 +156,31 @@ export default function Tracker() {
               Score
             </p>
 
-            <p className="text-2xl font-semibold text-gray-900">{score}</p>
+            <p className="text-2xl font-semibold text-gray-900">
+              {score}
+            </p>
           </div>
+
         </div>
       </header>
 
       {/* MAIN */}
       <main className="mx-auto max-w-4xl px-6 py-8">
+
+        {/* Back */}
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+        >
+          <span className="text-lg">←</span>
+          Back
+        </button>
+
         {/* Reminder */}
         <div className="mb-6">
-          <p className="text-sm text-gray-500">Reminder</p>
+          <p className="text-sm text-gray-500">
+            Reminder
+          </p>
 
           <p className="mt-1 text-lg text-gray-800">
             Focus on one task at a time.
@@ -167,8 +189,11 @@ export default function Tracker() {
 
         {/* Progress */}
         <div className="mb-8 rounded-xl border bg-white p-6">
+
           <div className="mb-3 flex justify-between">
-            <span className="font-medium">Today's progress</span>
+            <span className="font-medium">
+              Today's progress
+            </span>
 
             <span className="text-sm text-gray-500">
               {completedTasks} / {totalTasks}
@@ -177,18 +202,21 @@ export default function Tracker() {
 
           <div className="h-2 rounded-full bg-gray-200">
             <div
-              className="h-2 rounded-full bg-green-600 transition-all"
+              className="h-2 rounded-full bg-green-600 transition-all duration-300"
               style={{
                 width: `${progress}%`,
               }}
             />
           </div>
 
-          <p className="mt-2 text-right text-sm text-gray-500">{progress}%</p>
+          <p className="mt-2 text-right text-sm text-gray-500">
+            {progress}%
+          </p>
         </div>
 
         {/* TASKS */}
         <div className="space-y-3">
+
           {tasks.map((task, index) => (
             <div
               key={task.id}
@@ -217,15 +245,30 @@ export default function Tracker() {
                 </p>
               </div>
 
-              <span className="text-sm text-gray-500">+10</span>
+              <span className="text-sm font-medium text-gray-500">
+                +10
+              </span>
             </div>
           ))}
+
         </div>
+
+        {/* EMPTY */}
+        {tasks.length === 0 && (
+          <div className="rounded-xl border bg-white p-8 text-center">
+            <p className="text-gray-500">
+              No tasks available.
+            </p>
+          </div>
+        )}
 
         {/* COMPLETED */}
         {showReview && (
           <div className="mt-8 rounded-xl border bg-white p-6">
-            <h2 className="text-xl font-semibold">Day completed</h2>
+
+            <h2 className="text-xl font-semibold text-gray-900">
+              Day completed 🎉
+            </h2>
 
             <p className="mt-1 text-gray-500">
               You earned {score} points today.
@@ -233,37 +276,47 @@ export default function Tracker() {
 
             {/* Review */}
             <div className="mt-6">
-              <label className="text-sm font-medium">How was your day?</label>
+              <label className="text-sm font-medium text-gray-900">
+                How was your day?
+              </label>
 
               <textarea
                 value={review}
-                onChange={(e) => setReview(e.target.value)}
+                onChange={(e) =>
+                  setReview(e.target.value)
+                }
                 rows="4"
-                className="mt-2 w-full rounded-lg border p-3 outline-none focus:border-gray-500"
+                className="mt-2 w-full rounded-lg border border-gray-300 p-3 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
                 placeholder="Write a few words..."
               />
             </div>
 
             {/* Suggestions */}
             <div className="mt-5">
-              <label className="text-sm font-medium">Suggestions</label>
+              <label className="text-sm font-medium text-gray-900">
+                Suggestions
+              </label>
 
               <textarea
                 value={suggestions}
-                onChange={(e) => setSuggestions(e.target.value)}
+                onChange={(e) =>
+                  setSuggestions(e.target.value)
+                }
                 rows="4"
-                className="mt-2 w-full rounded-lg border p-3 outline-none focus:border-gray-500"
+                className="mt-2 w-full rounded-lg border border-gray-300 p-3 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
                 placeholder="Anything you'd like to change?"
               />
             </div>
 
             {/* Signup */}
             <div className="mt-6 border-t pt-6">
-              <p className="font-medium">Want to keep your progress?</p>
+              <p className="font-medium text-gray-900">
+                Want to keep your progress?
+              </p>
 
               <p className="mt-1 text-sm text-gray-500">
-                Create an account to save your tracker history and access it
-                later.
+                Create an account to save your tracker
+                history and access it later.
               </p>
 
               <button
@@ -274,14 +327,17 @@ export default function Tracker() {
               </button>
             </div>
 
+            {/* Save */}
             <button
               onClick={saveReview}
-              className="mt-3 rounded-lg border px-5 py-2.5 text-sm font-medium hover:bg-gray-50"
+              className="mt-3 rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium hover:bg-gray-50"
             >
               Save locally
             </button>
+
           </div>
         )}
+
       </main>
     </div>
   );

@@ -5,6 +5,7 @@ import Nav from "./Nav";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Leaderboard() {
+    const token  = localStorage.getItem("token");
     const [ranks, setRanks] = useState(() => {
         try {
             return JSON.parse(
@@ -129,6 +130,7 @@ export default function Leaderboard() {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
+                
                 <Nav />
 
                 <main className="mx-auto max-w-5xl px-6 py-10">
@@ -177,17 +179,21 @@ export default function Leaderboard() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Nav />
-
+            {
+                    token &&
+                <Nav />
+                }
             <main className="mx-auto max-w-5xl px-6 py-8">
 
                 {/* Back */}
+                {token && 
                 <Link
-                    to="/dashboard"
-                    className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+                to="/dashboard"
+                className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900"
                 >
                     ← Back to Dashboard
                 </Link>
+                }
 
                 {/* Header */}
                 <div className="mb-8 flex items-end justify-between">
