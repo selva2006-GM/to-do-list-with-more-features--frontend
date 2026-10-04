@@ -352,7 +352,7 @@ export default function Tracker() {
           <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-7">
 
             <h2 className="text-xl font-semibold text-gray-900">
-              Day completed 🎉
+              Day completed
             </h2>
 
             <p className="mt-1 text-gray-500">

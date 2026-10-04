@@ -48,25 +48,39 @@ export default function Heatmapdash() {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
+  
   const todayString = formatDate(today);
-
-  const startDate = new Date(today);
-  startDate.setFullYear(today.getFullYear() - 1);
-  startDate.setDate(startDate.getDate() - startDate.getDay());
-
+  
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  const startDateValue = new Date(user.startdate);
+  
+  const startDateString =
+      startDateValue.toLocaleDateString("en-CA");
+  
+  const startDate = new Date(
+      `${startDateString}T00:00:00`
+  );
+  
+  startDate.setHours(0, 0, 0, 0);
+  
+  console.log("START DATE:", startDateString);
+  console.log("TODAY:", todayString);
+  
   const heatmapDays = [];
+  
   let currentDate = new Date(startDate);
-
+  
   while (currentDate <= today) {
-    heatmapDays.push({
-      date: formatDate(currentDate),
-      dateObject: new Date(currentDate),
-    });
-
-    currentDate.setDate(currentDate.getDate() + 1);
+      heatmapDays.push({
+          date: formatDate(currentDate),
+          dateObject: new Date(currentDate),
+      });
+  
+      currentDate.setDate(
+          currentDate.getDate() + 1
+      );
   }
-
   const weeks = [];
 
   for (let i = 0; i < heatmapDays.length; i += 7) {
@@ -202,7 +216,7 @@ export default function Heatmapdash() {
               </span>
 
               <span className="text-lg text-gray-500">
-                tasks in the past one year
+              tasks since your start date
               </span>
 
               <span

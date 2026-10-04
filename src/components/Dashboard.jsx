@@ -313,12 +313,11 @@ export default function Dashboard() {
                 ===================================================== */}
 
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-          <div className="flex items-center justify-between">
+          
             <UTracker/>
-            </div>
         </div>
         <div className="mt-6">
-          <Heatmapdash/>
+        <Heatmapdash tasks={tasks} />
         </div>
 
         {/* =====================================================

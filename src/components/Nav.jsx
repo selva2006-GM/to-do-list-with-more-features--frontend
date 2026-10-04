@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 export default function Nav() {
   const [logged, setlogget] = useState(false);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -19,7 +19,7 @@ export default function Nav() {
     localStorage.removeItem("user");
 
     setlogget(false);
-
+    navigate("/");
     window.location.reload();
   }
 
