@@ -2,54 +2,74 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function UcreateTask() {
-  const [tasks, setTasks] = useState([]);
   const navigate = useNavigate();
 
-  function Taskinput() {
-    setTasks([
-      ...tasks,
+  const [tasks, setTasks] = useState([
+    {
+      task: "",
+      completed: false,
+    },
+  ]);
+
+  const [error, setError] = useState("");
+
+  function addTask() {
+    setTasks((currentTasks) => [
+      ...currentTasks,
       {
         task: "",
-        duration: "",
-        unit: "minutes",
         completed: false,
       },
     ]);
   }
 
-  function handleTaskChange(index, value) {
-    const updatedTasks = [...tasks];
-    updatedTasks[index].task = value;
-    setTasks(updatedTasks);
+  function removeTask(index) {
+    if (tasks.length === 1) {
+      return;
+    }
+
+    setTasks((currentTasks) =>
+      currentTasks.filter((_, i) => i !== index)
+    );
   }
 
-  function handleDurationChange(index, value) {
-    const updatedTasks = [...tasks];
-    updatedTasks[index].duration = value;
-    setTasks(updatedTasks);
+  function updateTask(index, value) {
+    setTasks((currentTasks) =>
+      currentTasks.map((task, i) =>
+        i === index
+          ? {
+              ...task,
+              task: value,
+            }
+          : task
+      )
+    );
+
+    setError("");
   }
 
-  function handleUnitChange(index, value) {
-    const updatedTasks = [...tasks];
-    updatedTasks[index].unit = value;
-    setTasks(updatedTasks);
-  }
+  function createTasks(e) {
+    e.preventDefault();
 
-  function discardTask(index) {
-    setTasks(tasks.filter((_, i) => i !== index));
-  }
+    setError("");
 
-  function savedata() {
-    const today = new Date().toISOString().split("T")[0];
+    for (let i = 0; i < tasks.length; i++) {
+      if (!tasks[i].task.trim()) {
+        setError(`Please enter task ${i + 1}.`);
+        return;
+      }
+    }
+
+    const today = new Date()
+      .toISOString()
+      .split("T")[0];
 
     const existingData =
       JSON.parse(localStorage.getItem("tasks")) || {};
 
     existingData[today] = tasks.map((task, index) => ({
       id: index + 1,
-      task: task.task,
-      duration: Number(task.duration),
-      unit: task.unit,
+      task: task.task.trim(),
       completed: false,
     }));
 
@@ -58,104 +78,155 @@ export default function UcreateTask() {
       JSON.stringify(existingData)
     );
 
+    // Save today's tracker start time
+    const trackerStartTimes =
+      JSON.parse(
+        localStorage.getItem("trackerStartTimes")
+      ) || {};
+
+    trackerStartTimes[today] = Date.now();
+
+    localStorage.setItem(
+      "trackerStartTimes",
+      JSON.stringify(trackerStartTimes)
+    );
+
     navigate("/tracker");
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 px-4 py-10">
-      <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-lg">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
 
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
-        >
-          <span className="text-lg">←</span>
-          Back
-        </button>
+      <div className="w-full max-w-2xl">
 
-        {/* Heading */}
-        <h1 className="text-3xl font-bold text-gray-900">
-          Create Tasks
-        </h1>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
 
-        <p className="mt-2 mb-6 text-sm text-gray-500">
-          Add tasks and set their duration.
-        </p>
+          {/* HEADER */}
+          <div className="flex items-start justify-between">
 
-        {/* Add Task */}
-        <button
-          onClick={Taskinput}
-          className="mb-6 rounded-lg bg-green-600 px-5 py-2.5 font-semibold text-white hover:bg-green-700"
-        >
-          + Add Task
-        </button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Create Tasks
+              </h1>
 
-        {/* Tasks */}
-        <div className="space-y-4">
-          {tasks.map((task, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-3 rounded-xl border border-gray-200 p-4"
+              <p className="text-gray-500 mt-2">
+                Add multiple tasks to your tracker.
+              </p>
+            </div>
+
+            <span className="rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-600">
+              {tasks.length}{" "}
+              {tasks.length === 1 ? "task" : "tasks"}
+            </span>
+
+          </div>
+
+          {/* FORM */}
+          <form
+            onSubmit={createTasks}
+            className="mt-8"
+          >
+
+            {/* TASKS */}
+            <div className="space-y-4">
+
+              {tasks.map((task, index) => (
+
+                <div
+                  key={index}
+                  className="rounded-2xl border border-gray-200 bg-gray-50 p-5"
+                >
+
+                  {/* TASK HEADER */}
+                  <div className="mb-6 flex items-center justify-between">
+
+                    <p className="text-lg font-medium text-gray-900">
+                      Task {index + 1}
+                    </p>
+
+                    {tasks.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeTask(index)}
+                        className="text-sm text-red-500 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    )}
+
+                  </div>
+
+                  {/* TASK INPUT */}
+                  <div>
+
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Task
+                    </label>
+
+                    <input
+                      type="text"
+                      value={task.task}
+                      onChange={(e) =>
+                        updateTask(
+                          index,
+                          e.target.value
+                        )
+                      }
+                      placeholder="Enter your task"
+                      className="w-full rounded-xl border border-gray-300 bg-white px-5 py-4 text-base outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
+                    />
+
+                  </div>
+
+                </div>
+
+              ))}
+
+            </div>
+
+            {/* ADD TASK */}
+            <button
+              type="button"
+              onClick={addTask}
+              className="mt-5 w-full rounded-xl border border-dashed border-gray-400 py-4 text-sm font-medium text-gray-800 transition hover:bg-gray-50"
             >
-              <input
-                type="text"
-                value={task.task}
-                placeholder={`Task ${index + 1}`}
-                onChange={(e) =>
-                  handleTaskChange(index, e.target.value)
-                }
-                className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
-              />
+              + Add Another Task
+            </button>
 
-              <input
-                type="number"
-                min="1"
-                value={task.duration}
-                placeholder="Duration"
-                onChange={(e) =>
-                  handleDurationChange(index, e.target.value)
-                }
-                className="w-28 rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
-              />
+            {/* ERROR */}
+            {error && (
+              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </div>
+            )}
 
-              <select
-                value={task.unit}
-                onChange={(e) =>
-                  handleUnitChange(index, e.target.value)
-                }
-                className="rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
-              >
-                <option value="minutes">Minutes</option>
-                <option value="hours">Hours</option>
-              </select>
+            {/* BUTTONS */}
+            <div className="mt-7 flex gap-4">
 
               <button
-                onClick={() => discardTask(index)}
-                title="Discard task"
-                className="rounded-lg p-2 text-red-500 hover:bg-red-50 hover:text-red-700"
+                type="button"
+                onClick={() => navigate(-1)}
+                className="flex-1 rounded-xl border border-gray-300 bg-white py-4 text-base font-medium text-gray-700 transition hover:bg-gray-50"
               >
-                🗑️
+                Cancel
               </button>
+
+              <button
+                type="submit"
+                className="flex-1 rounded-xl bg-gray-900 py-4 text-base font-medium text-white transition hover:bg-gray-800"
+              >
+                Create {tasks.length}{" "}
+                {tasks.length === 1 ? "Task" : "Tasks"}
+              </button>
+
             </div>
-          ))}
+
+          </form>
+
         </div>
 
-        {tasks.length === 0 && (
-          <p className="mt-4 rounded-lg border border-dashed border-gray-300 p-6 text-center text-gray-500">
-            No tasks added yet. 
-          </p>
-        )}
-
-        {tasks.length > 0 && (
-          <button
-            onClick={savedata}
-            className="mt-8 w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-          >
-            Save All Tasks
-          </button>
-        )}
       </div>
+
     </div>
   );
 }

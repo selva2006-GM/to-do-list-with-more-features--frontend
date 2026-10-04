@@ -7,7 +7,6 @@ import Register from "./components/Register";
 import UCreateTask from "./components/UCreateTask";
 import Tracker from "./components/Tracker";
 import Dashboard from "./components/Dashboard";
-import Heatmap from "./components/Heatmap";
 import History from "./components/History";
 import Leaderboard from "./components/Leaderboard";
 import CreateTask from "./components/CreateTask";
@@ -28,7 +27,6 @@ export default function App() {
           <Route path="/ucreatetask" element={<UCreateTask />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/history" element={<History />} />
-          <Route path="/heatmap" element={<Heatmap />} />
           <Route path="/heatmapdash" element={<Heatmapdash />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/createtask" element={<CreateTask />} />

@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import Nav from "./Nav";
 import API_URL from "../config/api";
 import Heatmapdash from "./Heatmapdash";
-import Heatmap from "./Heatmap";
+
+import UTracker from "./UTracker";
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -258,7 +259,7 @@ export default function Dashboard() {
         <div className="mb-8 flex flex-wrap gap-3">
           <Link
             to="/dashboard"
-            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+            className="rounded-lg border border-gray-700 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Dashboard
           </Link>
@@ -270,12 +271,6 @@ export default function Dashboard() {
             History
           </Link>
 
-          <Link
-            to="/heatmap"
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Heatmap
-          </Link>
 
           <Link
             to="/leaderboard"
@@ -308,42 +303,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* TODAY'S PROGRESS */}
-
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
-            <p className="text-sm text-gray-500">Today's progress</p>
-
-            <div className="mt-2 flex items-end justify-between">
-              <p className="text-3xl font-semibold text-gray-900">
-                {progress}%
-              </p>
-
-              <p className="text-sm text-gray-500">
-                {completedTasks} / {totalTasks}
-              </p>
-            </div>
-
-            <div className="mt-4 h-2 rounded-full bg-gray-200">
-              <div
-                className="h-2 rounded-full bg-green-600 transition-all"
-                style={{
-                  width: `${progress}%`,
-                }}
-              />
-            </div>
-          </div>
 
           {/* SCORE */}
 
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
-            <p className="text-sm text-gray-500">Today's score</p>
-
-            <p className="mt-2 text-3xl font-semibold text-gray-900">{score}</p>
-
-            <p className="mt-1 text-sm text-gray-500">
-              {rank ? `Rank #${rank.rank}` : "Not ranked yet"}
-            </p>
-          </div>
         </div>
 
         {/* =====================================================
@@ -352,58 +314,8 @@ export default function Dashboard() {
 
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold text-gray-900">Today's tasks</h2>
-
-              <p className="mt-1 text-sm text-gray-500">
-                {completedTasks} of {totalTasks} completed
-              </p>
+            <UTracker/>
             </div>
-
-            <Link
-              to="/utracker"
-              className="text-sm font-medium text-gray-700 hover:underline"
-            >
-              Open tracker
-            </Link>
-          </div>
-
-          <div className="mt-5 space-y-2">
-            {todayTasks.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-gray-300 p-5 text-center text-sm text-gray-500">
-                No tasks created for today.
-              </p>
-            ) : (
-              todayTasks.map((task) => (
-                <div
-                  key={task.task_id}
-                  className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`h-3 w-3 rounded-full ${
-                        task.completed ? "bg-green-500" : "bg-gray-300"
-                      }`}
-                    />
-
-                    <span
-                      className={
-                        task.completed
-                          ? "text-gray-400 line-through"
-                          : "text-gray-800"
-                      }
-                    >
-                      {task.task_text}
-                    </span>
-                  </div>
-
-                  <span className="text-sm text-gray-500">
-                    {task.completed ? "Completed" : "Pending"}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
         </div>
         <div className="mt-6">
           <Heatmapdash/>

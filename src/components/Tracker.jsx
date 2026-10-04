@@ -10,32 +10,17 @@ export default function Tracker() {
   const [showReview, setShowReview] = useState(false);
 
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [startTime, setStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
 
+  // Load today's tasks
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-      setElapsedTime((prev) => prev + 1);
-    }, 1000);
+    const today = new Date()
+      .toISOString()
+      .split("T")[0];
 
-    return () => clearInterval(timer);
-  }, []);
-
-  function formatTime(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}:${String(secs).padStart(2, "0")}`;
-  }
-
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-
-    const savedTasks = JSON.parse(localStorage.getItem("tasks")) || {};
+    const savedTasks =
+      JSON.parse(localStorage.getItem("tasks")) || {};
 
     if (!savedTasks[today]) {
       navigate("/ucreatetask");
@@ -44,14 +29,76 @@ export default function Tracker() {
 
     setTasks(savedTasks[today]);
 
+    // Load saved review data
     const savedTrackerData =
       JSON.parse(localStorage.getItem("trackerData")) || {};
 
     if (savedTrackerData[today]) {
       setReview(savedTrackerData[today].review || "");
-      setSuggestions(savedTrackerData[today].suggestions || "");
+      setSuggestions(
+        savedTrackerData[today].suggestions || ""
+      );
     }
+
+    // Get today's tracker start time
+    const trackerStartTimes =
+      JSON.parse(
+        localStorage.getItem("trackerStartTimes")
+      ) || {};
+
+    let todayStartTime = trackerStartTimes[today];
+
+    // Create start time if it doesn't exist
+    if (!todayStartTime) {
+      todayStartTime = Date.now();
+
+      trackerStartTimes[today] = todayStartTime;
+
+      localStorage.setItem(
+        "trackerStartTimes",
+        JSON.stringify(trackerStartTimes)
+      );
+    }
+
+    setStartTime(todayStartTime);
   }, [navigate]);
+
+  // Live clock + timer
+  useEffect(() => {
+    if (!startTime) return;
+
+    function updateTime() {
+      const now = Date.now();
+
+      setCurrentTime(new Date(now));
+
+      const elapsed = Math.floor(
+        (now - startTime) / 1000
+      );
+
+      setElapsedTime(elapsed);
+    }
+
+    updateTime();
+
+    const timer = setInterval(updateTime, 1000);
+
+    return () => clearInterval(timer);
+  }, [startTime]);
+
+  function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+
+    const minutes = Math.floor(
+      (seconds % 3600) / 60
+    );
+
+    const secs = seconds % 60;
+
+    return `${String(hours).padStart(2, "0")}:${String(
+      minutes
+    ).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
 
   function toggleTask(index) {
     const updatedTasks = [...tasks];
@@ -61,18 +108,25 @@ export default function Tracker() {
 
     setTasks(updatedTasks);
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date()
+      .toISOString()
+      .split("T")[0];
 
     const savedTasks =
       JSON.parse(localStorage.getItem("tasks")) || {};
 
     savedTasks[today] = updatedTasks;
 
-    localStorage.setItem("tasks", JSON.stringify(savedTasks));
-
-    const completed = updatedTasks.every(
-      (task) => task.completed
+    localStorage.setItem(
+      "tasks",
+      JSON.stringify(savedTasks)
     );
+
+    const completed =
+      updatedTasks.length > 0 &&
+      updatedTasks.every(
+        (task) => task.completed
+      );
 
     setShowReview(completed);
   }
@@ -86,12 +140,16 @@ export default function Tracker() {
   const progress =
     totalTasks === 0
       ? 0
-      : Math.round((completedTasks / totalTasks) * 100);
+      : Math.round(
+          (completedTasks / totalTasks) * 100
+        );
 
   const score = completedTasks * 10;
 
   function saveReview() {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date()
+      .toISOString()
+      .split("T")[0];
 
     const trackerData =
       JSON.parse(localStorage.getItem("trackerData")) || {};
@@ -101,6 +159,7 @@ export default function Tracker() {
       score,
       review,
       suggestions,
+      startTime,
       elapsedTime,
     };
 
@@ -119,7 +178,7 @@ export default function Tracker() {
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
 
-          {/* Date + Clock */}
+          {/* DATE + CLOCK */}
           <div>
             <p className="text-sm text-gray-500">
               {currentTime.toLocaleDateString("en-IN", {
@@ -139,7 +198,7 @@ export default function Tracker() {
             </p>
           </div>
 
-          {/* Timer */}
+          {/* TIMER */}
           <div className="text-center">
             <p className="text-xs uppercase tracking-wide text-gray-500">
               Timer
@@ -150,7 +209,7 @@ export default function Tracker() {
             </p>
           </div>
 
-          {/* Score */}
+          {/* SCORE */}
           <div className="text-right">
             <p className="text-xs uppercase tracking-wide text-gray-500">
               Score
@@ -167,104 +226,130 @@ export default function Tracker() {
       {/* MAIN */}
       <main className="mx-auto max-w-4xl px-6 py-8">
 
-        {/* Back */}
+        {/* BACK */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(-2)}
           className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
         >
           <span className="text-lg">←</span>
           Back
         </button>
 
-        {/* Reminder */}
-        <div className="mb-6">
+        {/* TITLE */}
+        <div className="mb-8">
           <p className="text-sm text-gray-500">
-            Reminder
+            Daily Tracker
           </p>
 
-          <p className="mt-1 text-lg text-gray-800">
-            Focus on one task at a time.
+          <h1 className="mt-1 text-3xl font-bold text-gray-900">
+            Today's Tasks
+          </h1>
+
+          <p className="mt-2 text-gray-500">
+            Complete your tasks and track your progress.
           </p>
         </div>
 
-        {/* Progress */}
-        <div className="mb-8 rounded-xl border bg-white p-6">
+        {/* PROGRESS CARD */}
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-7">
 
-          <div className="mb-3 flex justify-between">
-            <span className="font-medium">
-              Today's progress
-            </span>
+          <div className="flex items-start justify-between">
 
-            <span className="text-sm text-gray-500">
-              {completedTasks} / {totalTasks}
-            </span>
+            <div>
+              <p className="text-sm text-gray-500">
+                Today's progress
+              </p>
+
+              <p className="mt-1 text-4xl font-semibold text-gray-900">
+                {progress}%
+              </p>
+            </div>
+
+            <div className="text-right">
+              <p className="text-sm text-gray-500">
+                Tasks
+              </p>
+
+              <p className="mt-1 text-2xl font-medium text-gray-900">
+                {completedTasks} / {totalTasks}
+              </p>
+            </div>
+
           </div>
 
-          <div className="h-2 rounded-full bg-gray-200">
+          {/* PROGRESS BAR */}
+          <div className="mt-6 h-3 overflow-hidden rounded-full bg-gray-200">
             <div
-              className="h-2 rounded-full bg-green-600 transition-all duration-300"
+              className="h-full rounded-full bg-gray-900 transition-all duration-300"
               style={{
                 width: `${progress}%`,
               }}
             />
           </div>
 
-          <p className="mt-2 text-right text-sm text-gray-500">
-            {progress}%
-          </p>
-        </div>
+          {/* SCORE */}
+          <div className="mt-6 flex justify-between">
+            <p className="text-sm text-gray-500">
+              Today's score
+            </p>
 
-        {/* TASKS */}
-        <div className="space-y-3">
-
-          {tasks.map((task, index) => (
-            <div
-              key={task.id}
-              className="flex items-center gap-4 rounded-xl border bg-white px-5 py-4"
-            >
-              <input
-                type="checkbox"
-                checked={task.completed}
-                onChange={() => toggleTask(index)}
-                className="h-5 w-5"
-              />
-
-              <div className="flex-1">
-                <p
-                  className={
-                    task.completed
-                      ? "text-gray-400 line-through"
-                      : "text-gray-900"
-                  }
-                >
-                  {task.task}
-                </p>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  {task.duration} {task.unit}
-                </p>
-              </div>
-
-              <span className="text-sm font-medium text-gray-500">
-                +10
-              </span>
-            </div>
-          ))}
-
-        </div>
-
-        {/* EMPTY */}
-        {tasks.length === 0 && (
-          <div className="rounded-xl border bg-white p-8 text-center">
-            <p className="text-gray-500">
-              No tasks available.
+            <p className="font-medium text-gray-900">
+              {score} points
             </p>
           </div>
-        )}
 
-        {/* COMPLETED */}
+        </div>
+
+        {/* TASK CARD */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-7">
+
+          <h2 className="text-lg font-semibold text-gray-900">
+            Tasks
+          </h2>
+
+          <div className="mt-6 space-y-3">
+
+            {tasks.map((task, index) => (
+              <div
+                key={task.id}
+                className="flex items-center gap-4 rounded-xl border border-gray-200 px-5 py-4 transition hover:bg-gray-50"
+              >
+
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => toggleTask(index)}
+                  className="h-5 w-5 cursor-pointer"
+                />
+
+                <div className="flex-1">
+
+                  <p
+                    className={
+                      task.completed
+                        ? "text-gray-400 line-through"
+                        : "text-gray-900"
+                    }
+                  >
+                    {task.task}
+                  </p>
+
+                </div>
+
+                <span className="text-sm font-medium text-gray-500">
+                  +10
+                </span>
+
+              </div>
+            ))}
+
+          </div>
+
+        </div>
+
+        {/* COMPLETED REVIEW */}
         {showReview && (
-          <div className="mt-8 rounded-xl border bg-white p-6">
+          <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-7">
 
             <h2 className="text-xl font-semibold text-gray-900">
               Day completed 🎉
@@ -274,8 +359,9 @@ export default function Tracker() {
               You earned {score} points today.
             </p>
 
-            {/* Review */}
+            {/* REVIEW */}
             <div className="mt-6">
+
               <label className="text-sm font-medium text-gray-900">
                 How was your day?
               </label>
@@ -289,10 +375,12 @@ export default function Tracker() {
                 className="mt-2 w-full rounded-lg border border-gray-300 p-3 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
                 placeholder="Write a few words..."
               />
+
             </div>
 
-            {/* Suggestions */}
+            {/* SUGGESTIONS */}
             <div className="mt-5">
+
               <label className="text-sm font-medium text-gray-900">
                 Suggestions
               </label>
@@ -306,10 +394,12 @@ export default function Tracker() {
                 className="mt-2 w-full rounded-lg border border-gray-300 p-3 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
                 placeholder="Anything you'd like to change?"
               />
+
             </div>
 
-            {/* Signup */}
+            {/* CREATE ACCOUNT */}
             <div className="mt-6 border-t pt-6">
+
               <p className="font-medium text-gray-900">
                 Want to keep your progress?
               </p>
@@ -321,16 +411,17 @@ export default function Tracker() {
 
               <button
                 onClick={() => navigate("/register")}
-                className="mt-4 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
+                className="mt-4 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
               >
                 Create account
               </button>
+
             </div>
 
-            {/* Save */}
+            {/* SAVE */}
             <button
               onClick={saveReview}
-              className="mt-3 rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium hover:bg-gray-50"
+              className="mt-3 rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
             >
               Save locally
             </button>

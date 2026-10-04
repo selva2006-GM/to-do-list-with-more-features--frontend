@@ -198,16 +198,9 @@ export default function UTracker() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-        <Nav/>
-      <main className="mx-auto max-w-3xl px-6 py-8">
+    
+    <main className="w-full px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="mb-5 text-sm text-gray-500 hover:text-gray-900"
-          >
-            ← Back to dashboard
-          </button>
 
           <p className="text-sm text-gray-500">
             Daily Tracker
@@ -348,9 +341,7 @@ export default function UTracker() {
               </p>
             </div>
           )}
-
-        
       </main>
-    </div>
+
   );
 }

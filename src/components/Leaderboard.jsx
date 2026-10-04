@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Nav from "./Nav";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Leaderboard() {
+    const navigate = useNavigate();
     const token  = localStorage.getItem("token");
     const [ranks, setRanks] = useState(() => {
         try {
@@ -187,12 +189,12 @@ export default function Leaderboard() {
 
                 {/* Back */}
                 {token && 
-                <Link
-                to="/dashboard"
-                className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-                >
-                    ← Back to Dashboard
-                </Link>
+                 <button
+                 onClick={() => navigate(-1)}
+                 className="text-sm font-medium text-gray-600 hover:text-gray-900"
+               >
+                 ← Back to Dashboard
+               </button>
                 }
 
                 {/* Header */}
