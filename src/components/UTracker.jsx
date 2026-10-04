@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../config/api";
-import Nav from "./Nav";
 
 export default function UTracker() {
   const navigate = useNavigate();
@@ -9,9 +8,6 @@ export default function UTracker() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const [review, setReview] = useState("");
-  const [showReview, setShowReview] = useState(false);
 
   const today = new Date().toLocaleDateString("en-CA");
 
@@ -26,7 +22,6 @@ export default function UTracker() {
         }
 
         const response = await fetch(`${API_URL}/api/tasks`, {
-          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -57,6 +52,8 @@ export default function UTracker() {
 
   const toggleTask = async (task) => {
     try {
+      setError("");
+
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -64,15 +61,12 @@ export default function UTracker() {
         return;
       }
 
-      const newCompleted = !task.completed;
+      const completed = !task.completed;
 
       setTasks((currentTasks) =>
         currentTasks.map((item) =>
           item.task_id === task.task_id
-            ? {
-                ...item,
-                completed: newCompleted,
-              }
+            ? { ...item, completed }
             : item
         )
       );
@@ -86,7 +80,7 @@ export default function UTracker() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            completed: newCompleted,
+            completed,
           }),
         }
       );
@@ -94,31 +88,17 @@ export default function UTracker() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to update task"
-        );
+        throw new Error(data.message || "Failed to update task");
       }
 
-      const scoreResponse = await fetch(
-        `${API_URL}/api/tasks/score`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const scoreData = await scoreResponse.json();
-
-      if (!scoreResponse.ok) {
-        throw new Error(
-          scoreData.message || "Failed to update score"
-        );
-      }
+      await fetch(`${API_URL}/api/tasks/score`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       console.log("TASK UPDATED:", data);
-      console.log("SCORE UPDATED:", scoreData);
     } catch (error) {
       console.error("UPDATE TASK ERROR:", error);
 
@@ -142,10 +122,7 @@ export default function UTracker() {
 
         setTasks(todayTasks);
       } catch (reloadError) {
-        console.error(
-          "FAILED TO RELOAD TASKS:",
-          reloadError
-        );
+        console.error("FAILED TO RELOAD TASKS:", reloadError);
       }
     }
   };
@@ -159,189 +136,177 @@ export default function UTracker() {
   const progress =
     totalTasks === 0
       ? 0
-      : Math.round(
-          (completedTasks / totalTasks) * 100
-        );
+      : Math.round((completedTasks / totalTasks) * 100);
 
-  const todayScore = completedTasks * 10;
-
-  useEffect(() => {
-    if (
-      tasks.length > 0 &&
-      completedTasks === totalTasks
-    ) {
-      setShowReview(true);
-    } else {
-      setShowReview(false);
-    }
-  }, [completedTasks, totalTasks, tasks.length]);
-
-  const submitReview = () => {
-    localStorage.setItem(
-      `review-${today}`,
-      review
-    );
-
-    setShowReview(false);
-  };
+  const score = completedTasks * 10;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <div className="flex min-h-[70vh] items-center justify-center">
-          <p className="text-gray-500">
-            Loading your tasks...
-          </p>
-        </div>
+      <div className="flex min-h-[300px] items-center justify-center">
+        <p className="text-sm text-gray-500">
+          Loading tasks...
+        </p>
       </div>
     );
   }
 
   return (
-    
-    <main className="w-full px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-8">
+    <main className="w-full">
 
-          <p className="text-sm text-gray-500">
-            Daily Tracker
-          </p>
+      {/* HEADER */}
+      <div className="mb-6">
+        <p className="text-sm text-gray-500">
+          Daily Tracker
+        </p>
 
-          <h1 className="mt-1 text-3xl font-semibold text-gray-900">
-            Today's Tasks
-          </h1>
+        <h1 className="mt-1 text-2xl font-semibold text-gray-900">
+          Today's Tasks
+        </h1>
 
-          <p className="mt-2 text-sm text-gray-500">
-            Complete your tasks and track your progress.
-          </p>
+        <p className="mt-1 text-sm text-gray-500">
+          Complete your tasks and track your progress.
+        </p>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      {/* PROGRESS */}
+      <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5">
+
+        <div className="flex items-center justify-between">
+
+          <div>
+            <p className="text-sm text-gray-500">
+              Today's progress
+            </p>
+
+            <p className="mt-1 text-3xl font-semibold text-gray-900">
+              {progress}%
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-sm text-gray-500">
+              Tasks
+            </p>
+
+            <p className="mt-1 font-semibold text-gray-900">
+              {completedTasks} / {totalTasks}
+            </p>
+          </div>
+
         </div>
 
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-sm text-gray-500">
-                Today's progress
-              </p>
-
-              <p className="mt-1 text-3xl font-semibold text-gray-900">
-                {progress}%
-              </p>
-            </div>
-
-            <div className="text-right">
-              <p className="text-sm text-gray-500">
-                Tasks
-              </p>
-
-              <p className="font-semibold text-gray-900">
-                {completedTasks} / {totalTasks}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 h-3 overflow-hidden rounded-full bg-gray-200">
-            <div
-              className="h-full rounded-full bg-green-600 transition-all duration-300"
-              style={{
-                width: `${progress}%`,
-              }}
-            />
-          </div>
-
-          <div className="mt-4 flex justify-between text-sm">
-            <span className="text-gray-500">
-              Today's score
-            </span>
-
-            <span className="font-semibold text-gray-900">
-              {todayScore} points
-            </span>
-          </div>
+        <div className="mt-5 h-2 overflow-hidden rounded-full bg-gray-100">
+          <div
+            className="h-full rounded-full bg-green-500 transition-all duration-300"
+            style={{
+              width: `${progress}%`,
+            }}
+          />
         </div>
 
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div className="mt-4 flex justify-between text-sm">
+          <span className="text-gray-500">
+            Score
+          </span>
+
+          <span className="font-medium text-gray-900">
+            {score} points
+          </span>
+        </div>
+
+      </div>
+
+      {/* TASKS */}
+      <div className="rounded-xl border border-gray-200 bg-white">
+
+        <div className="border-b border-gray-200 px-5 py-4">
           <h2 className="font-semibold text-gray-900">
             Tasks
           </h2>
-
-          {tasks.length === 0 ? (
-            <div className="mt-5 rounded-lg border border-dashed border-gray-300 p-8 text-center">
-              <p className="text-gray-500">
-                No tasks for today.
-              </p>
-
-              <button
-                onClick={() => navigate("/createtask")}
-                className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-              >
-                Create Task
-              </button>
-            </div>
-          ) : (
-            <div className="mt-5 space-y-3">
-              {tasks.map((task) => (
-                <label
-                  key={task.task_id}
-                  className={`flex cursor-pointer items-center gap-4 rounded-lg border p-4 transition ${
-                    task.completed
-                      ? "border-green-200 bg-green-50"
-                      : "border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={Boolean(task.completed)}
-                    onChange={() => toggleTask(task)}
-                    className="h-5 w-5 rounded"
-                  />
-
-                  <div className="flex-1">
-                    <p
-                      className={`font-medium ${
-                        task.completed
-                          ? "text-gray-400 line-through"
-                          : "text-gray-900"
-                      }`}
-                    >
-                      {task.task_text}
-                    </p>
-                  </div>
-
-                  <span
-                    className={`text-sm ${
-                      task.completed
-                        ? "text-green-600"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    {task.completed
-                      ? "Completed"
-                      : "Pending"}
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
         </div>
 
-        {tasks.length > 0 &&
-          completedTasks === totalTasks && (
-            <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-6">
-              <h2 className="font-semibold text-green-800">
-                 All tasks completed!
-              </h2>
+        {tasks.length === 0 ? (
+          <div className="p-8 text-center">
 
-              <p className="mt-1 text-sm text-green-700">
-                You earned {todayScore} points today.
-              </p>
+            <p className="text-sm text-gray-500">
+              No tasks for today.
+            </p>
+
+            <button
+              onClick={() => navigate("/createtask")}
+              className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              Create Task
+            </button>
+
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+
+            {tasks.map((task) => (
+              <div
+                key={task.task_id}
+                className="flex items-center gap-4 px-5 py-4"
+              >
+
+                <input
+                  type="checkbox"
+                  checked={Boolean(task.completed)}
+                  onChange={() => toggleTask(task)}
+                  className="h-5 w-5 cursor-pointer accent-green-600"
+                />
+
+                <div className="flex-1">
+                  <p
+                    className={`text-sm ${
+                      task.completed
+                        ? "text-gray-400 line-through"
+                        : "text-gray-900"
+                    }`}
+                  >
+                    {task.task_text}
+                  </p>
+                </div>
+
+                <span
+                  className={`text-xs ${
+                    task.completed
+                      ? "text-green-600"
+                      : "text-gray-400"
+                  }`}
+                >
+                  {task.completed ? "Done" : "+10"}
+                </span>
+
+              </div>
+            ))}
+
+          </div>
+        )}
+
+        {tasks.length > 0 && (
+          <div className="border-t border-gray-200 px-5 py-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">
+                Completed
+              </span>
+
+              <span className="font-medium text-gray-900">
+                {completedTasks} / {totalTasks}
+              </span>
             </div>
-          )}
-      </main>
+          </div>
+        )}
 
+      </div>
+
+    </main>
   );
 }
