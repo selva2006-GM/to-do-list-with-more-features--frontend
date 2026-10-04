@@ -9,7 +9,7 @@ export default function History() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const today = new Date().toISOString().split("T")[0];
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -21,22 +21,17 @@ export default function History() {
           return;
         }
 
-        const response = await fetch(
-          `${API_URL}/api/tasks`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${API_URL}/api/tasks`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(
-            data.message || "Failed to fetch task history"
-          );
+          throw new Error(data.message || "Failed to fetch task history");
         }
 
         setTasks(data);
@@ -52,48 +47,35 @@ export default function History() {
   }, []);
 
   // GROUP TASKS BY DATE
-  const groupedTasks = tasks.reduce(
-    (groups, task) => {
-      const date = String(task.task_date)
-        .split("T")[0];
+  const groupedTasks = tasks.reduce((groups, task) => {
+    const date = String(task.task_date).split("T")[0];
 
-      if (!groups[date]) {
-        groups[date] = [];
-      }
+    if (!groups[date]) {
+      groups[date] = [];
+    }
 
-      groups[date].push(task);
+    groups[date].push(task);
 
-      return groups;
-    },
-    {}
-  );
+    return groups;
+  }, {});
 
-  const dates = Object.keys(groupedTasks).sort(
-    (a, b) => b.localeCompare(a)
-  );
+  const dates = Object.keys(groupedTasks).sort((a, b) => b.localeCompare(a));
 
   // FORMAT DATE
   const formatDate = (dateString) => {
-    const date = new Date(
-      `${dateString}T00:00:00`
-    );
+    const date = new Date(`${dateString}T00:00:00`);
 
-    return date.toLocaleDateString(
-      "en-IN",
-      {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }
-    );
+    return date.toLocaleDateString("en-IN", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
-
       <main className="mx-auto max-w-4xl px-6 py-8">
-
         {/* BACK */}
         <button
           onClick={() => navigate(-1)}
@@ -104,15 +86,11 @@ export default function History() {
 
         {/* HEADER */}
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Task History
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Task History</h1>
 
           <p className="mt-2 text-sm text-gray-500">
             View your previous tasks and progress.
           </p>
-
         </div>
 
         {/* ERROR */}
@@ -122,187 +100,154 @@ export default function History() {
           </div>
         )}
 
+        {/* Filter */}
+        <label
+          htmlFor="date"
+          className="flex flex-col gap-2 text-sm font-medium text-gray-700"
+        >
+          Date
+          <input
+            type="date"
+            name="date"
+            id="date"
+            max={today}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal text-gray-900 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
+          />
+        </label>
+
         {/* LOADING */}
         {loading && (
           <div className="mt-6 rounded-xl border border-gray-200 bg-white p-8 text-center">
-            <p className="text-sm text-gray-500">
-              Loading history...
-            </p>
+            <p className="text-sm text-gray-500">Loading history...</p>
           </div>
         )}
 
         {/* NO TASKS */}
-        {!loading &&
-          !error &&
-          tasks.length === 0 && (
-            <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+        {!loading && !error && tasks.length === 0 && (
+          <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+            <p className="text-gray-500">No task history yet.</p>
 
-              <p className="text-gray-500">
-                No task history yet.
-              </p>
-
-              <button
-                onClick={() => navigate("/create-task")}
-                className="mt-4 inline-block rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
-              >
-                Create a Task
-              </button>
-
-            </div>
-          )}
+            <button
+              onClick={() => navigate("/create-task")}
+              className="mt-4 inline-block rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              Create a Task
+            </button>
+          </div>
+        )}
 
         {/* HISTORY */}
-        {!loading &&
-          !error &&
-          dates.length > 0 && (
-            <div className="mt-6 space-y-6">
+        {!loading && !error && dates.length > 0 && (
+          <div className="mt-6 space-y-6">
+            {dates.map((date) => {
+              const dayTasks = groupedTasks[date];
 
-              {dates.map((date) => {
-                const dayTasks =
-                  groupedTasks[date];
+              const completed = dayTasks.filter(
+                (task) => task.completed,
+              ).length;
 
-                const completed =
-                  dayTasks.filter(
-                    (task) => task.completed
-                  ).length;
+              const total = dayTasks.length;
 
-                const total =
-                  dayTasks.length;
+              const percentage =
+                total === 0 ? 0 : Math.round((completed / total) * 100);
 
-                const percentage =
-                  total === 0
-                    ? 0
-                    : Math.round(
-                        (completed / total) * 100
-                      );
+              const score = completed * 10;
 
-                const score =
-                  completed * 10;
+              return (
+                <div
+                  key={date}
+                  className="rounded-xl border border-gray-200 bg-white p-6"
+                >
+                  {/* DATE HEADER */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="font-semibold text-gray-900">
+                        {formatDate(date)}
+                      </h2>
 
-                return (
-                  <div
-                    key={date}
-                    className="rounded-xl border border-gray-200 bg-white p-6"
-                  >
-
-                    {/* DATE HEADER */}
-                    <div className="flex items-center justify-between">
-
-                      <div>
-
-                        <h2 className="font-semibold text-gray-900">
-                          {formatDate(date)}
-                        </h2>
-
-                        <p className="mt-1 text-sm text-gray-500">
-                          {completed} of{" "}
-                          {total} tasks completed
-                        </p>
-
-                      </div>
-
-                      {/* SCORE */}
-                      <div className="text-right">
-
-                        <p className="text-lg font-semibold text-gray-900">
-                          {score}
-                        </p>
-
-                        <p className="text-xs text-gray-500">
-                          points
-                        </p>
-
-                      </div>
-
+                      <p className="mt-1 text-sm text-gray-500">
+                        {completed} of {total} tasks completed
+                      </p>
                     </div>
 
-                    {/* PROGRESS */}
-                    <div className="mt-4 h-2 rounded-full bg-gray-200">
+                    {/* SCORE */}
+                    <div className="text-right">
+                      <p className="text-lg font-semibold text-gray-900">
+                        {score}
+                      </p>
 
+                      <p className="text-xs text-gray-500">points</p>
+                    </div>
+                  </div>
+
+                  {/* PROGRESS */}
+                  <div className="mt-4 h-2 rounded-full bg-gray-200">
+                    <div
+                      className="h-2 rounded-full bg-green-600 transition-all"
+                      style={{
+                        width: `${percentage}%`,
+                      }}
+                    />
+                  </div>
+
+                  {/* PERCENTAGE */}
+                  <div className="mt-2 flex justify-between text-xs text-gray-500">
+                    <span>Progress</span>
+
+                    <span>{percentage}%</span>
+                  </div>
+
+                  {/* TASKS */}
+                  <div className="mt-5 space-y-2">
+                    {dayTasks.map((task) => (
                       <div
-                        className="h-2 rounded-full bg-green-600 transition-all"
-                        style={{
-                          width: `${percentage}%`,
-                        }}
-                      />
-
-                    </div>
-
-                    {/* PERCENTAGE */}
-                    <div className="mt-2 flex justify-between text-xs text-gray-500">
-                      <span>
-                        Progress
-                      </span>
-
-                      <span>
-                        {percentage}%
-                      </span>
-                    </div>
-
-                    {/* TASKS */}
-                    <div className="mt-5 space-y-2">
-
-                      {dayTasks.map((task) => (
-                        <div
-                          key={task.task_id}
-                          className={`flex items-center justify-between rounded-lg border px-4 py-3 ${
-                            task.completed
-                              ? "border-green-100 bg-green-50"
-                              : "border-gray-100 bg-gray-50"
-                          }`}
-                        >
-
-                          <div className="flex items-center gap-3">
-
-                            {/* STATUS */}
-                            <div
-                              className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
-                                task.completed
-                                  ? "bg-green-600 text-white"
-                                  : "border-2 border-gray-300"
-                              }`}
-                            >
-                              {task.completed && "✓"}
-                            </div>
-
-                            {/* TASK NAME */}
-                            <span
-                              className={
-                                task.completed
-                                  ? "text-gray-400 line-through"
-                                  : "text-gray-800"
-                              }
-                            >
-                              {task.task_text}
-                            </span>
-
-                          </div>
-
-                          {/* STATUS TEXT */}
-                          <span
-                            className={`text-xs font-medium ${
+                        key={task.task_id}
+                        className={`flex items-center justify-between rounded-lg border px-4 py-3 ${
+                          task.completed
+                            ? "border-green-100 bg-green-50"
+                            : "border-gray-100 bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* STATUS */}
+                          <div
+                            className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
                               task.completed
-                                ? "text-green-600"
-                                : "text-gray-400"
+                                ? "bg-green-600 text-white"
+                                : "border-2 border-gray-300"
                             }`}
                           >
-                            {task.completed
-                              ? "Completed"
-                              : "Pending"}
+                            {task.completed && "✓"}
+                          </div>
+
+                          {/* TASK NAME */}
+                          <span
+                            className={
+                              task.completed
+                                ? "text-gray-400 line-through"
+                                : "text-gray-800"
+                            }
+                          >
+                            {task.task_text}
                           </span>
-
                         </div>
-                      ))}
 
-                    </div>
-
+                        {/* STATUS TEXT */}
+                        <span
+                          className={`text-xs font-medium ${
+                            task.completed ? "text-green-600" : "text-gray-400"
+                          }`}
+                        >
+                          {task.completed ? "Completed" : "Pending"}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                );
-              })}
-
-            </div>
-          )}
-
+                </div>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );
