@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import Nav from "./Nav";
 import { useNavigate } from "react-router-dom";
+import Nav from "./Nav";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Leaderboard() {
     const navigate = useNavigate();
-    const token  = localStorage.getItem("token");
+
+    const token = localStorage.getItem("token");
+
     const [ranks, setRanks] = useState(() => {
         try {
             return JSON.parse(
@@ -28,20 +29,22 @@ export default function Leaderboard() {
         }
     });
 
-    const [loading, setLoading] = useState(() => {
-        return !localStorage.getItem("leaderboard");
-    });
+    const [loading, setLoading] = useState(
+        () => !localStorage.getItem("leaderboard")
+    );
 
     const [error, setError] = useState("");
 
     useEffect(() => {
         async function loadLeaderboard() {
             try {
-                /*
-                 * Fetch top users
-                 */
+                setError("");
+
                 const rankResponse = await fetch(
-                    `${API_URL}/api/tasks/rank`
+                    `${API_URL}/api/tasks/rank?t=${Date.now()}`,
+                    {
+                        cache: "no-store",
+                    }
                 );
 
                 if (!rankResponse.ok) {
@@ -56,23 +59,21 @@ export default function Leaderboard() {
 
                 setRanks(leaderboard);
 
-                // Save leaderboard
                 localStorage.setItem(
                     "leaderboard",
                     JSON.stringify(leaderboard)
                 );
 
-                /*
-                 * Fetch logged-in user's rank
-                 */
-                const token = localStorage.getItem("token");
+                const currentToken =
+                    localStorage.getItem("token");
 
-                if (token) {
+                if (currentToken) {
                     const myRankResponse = await fetch(
-                        `${API_URL}/api/tasks/my-rank`,
+                        `${API_URL}/api/tasks/my-rank?t=${Date.now()}`,
                         {
+                            cache: "no-store",
                             headers: {
-                                Authorization: `Bearer ${token}`,
+                                Authorization: `Bearer ${currentToken}`,
                             },
                         }
                     );
@@ -81,31 +82,49 @@ export default function Leaderboard() {
                         const myRankData =
                             await myRankResponse.json();
 
-                        setMyRank(myRankData.rank);
+                        const userRank = myRankData.rank;
 
-                        // Save user's rank
+                        setMyRank(userRank);
+
                         localStorage.setItem(
                             "myRank",
-                            JSON.stringify(myRankData.rank)
+                            JSON.stringify(userRank)
                         );
                     }
                 }
-
-                setError("");
             } catch (err) {
                 console.error(
                     "Leaderboard error:",
                     err
                 );
 
-                /*
-                 * If cached data exists,
-                 * keep showing it.
-                 */
-                if (
-                    ranks.length === 0 &&
-                    !myRank
-                ) {
+                try {
+                    const cachedLeaderboard =
+                        JSON.parse(
+                            localStorage.getItem(
+                                "leaderboard"
+                            ) || "[]"
+                        );
+
+                    const cachedRank =
+                        JSON.parse(
+                            localStorage.getItem(
+                                "myRank"
+                            ) || "null"
+                        );
+
+                    setRanks(cachedLeaderboard);
+                    setMyRank(cachedRank);
+
+                    if (
+                        cachedLeaderboard.length === 0 &&
+                        !cachedRank
+                    ) {
+                        setError(
+                            "Unable to load leaderboard."
+                        );
+                    }
+                } catch {
                     setError(
                         "Unable to load leaderboard."
                     );
@@ -115,30 +134,20 @@ export default function Leaderboard() {
             }
         }
 
-        /*
-         * Only fetch if we don't already
-         * have leaderboard data.
-         */
-        if (!localStorage.getItem("leaderboard")) {
-            loadLeaderboard();
-        } else {
-            setLoading(false);
-        }
+        loadLeaderboard();
     }, []);
 
-    /*
-     * Loading screen only on first-ever load
-     */
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
-                
                 <Nav />
 
                 <main className="mx-auto max-w-5xl px-6 py-10">
                     <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
                         <div className="animate-pulse space-y-5">
+
                             <div className="h-7 w-56 rounded bg-gray-200" />
+
                             <div className="h-4 w-72 rounded bg-gray-200" />
 
                             <div className="grid gap-4 md:grid-cols-3">
@@ -146,6 +155,7 @@ export default function Leaderboard() {
                                 <div className="h-44 rounded-2xl bg-gray-100" />
                                 <div className="h-36 rounded-2xl bg-gray-100" />
                             </div>
+
                         </div>
                     </div>
                 </main>
@@ -160,6 +170,7 @@ export default function Leaderboard() {
 
                 <main className="mx-auto max-w-5xl px-6 py-10">
                     <div className="rounded-2xl border border-red-100 bg-white p-8 shadow-sm">
+
                         <h2 className="text-xl font-semibold text-gray-900">
                             Tracker Leaderboard
                         </h2>
@@ -167,6 +178,7 @@ export default function Leaderboard() {
                         <p className="mt-2 text-sm text-red-500">
                             {error}
                         </p>
+
                     </div>
                 </main>
             </div>
@@ -181,24 +193,22 @@ export default function Leaderboard() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {
-                    token &&
-                <Nav />
-                }
+
+            {token && <Nav />}
+
             <main className="mx-auto max-w-5xl px-6 py-8">
 
-                {/* Back */}
-                {token && 
-                 <button
-                 onClick={() => navigate(-1)}
-                 className="text-sm font-medium text-gray-600 hover:text-gray-900"
-               >
-                 ← Back to Dashboard
-               </button>
-                }
+                {token && (
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mb-6 text-sm font-medium text-gray-600 hover:text-gray-900"
+                    >
+                        ← Back to Dashboard
+                    </button>
+                )}
 
-                {/* Header */}
                 <div className="mb-8 flex items-end justify-between">
+
                     <div>
                         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
                             Community
@@ -214,6 +224,7 @@ export default function Leaderboard() {
                     </div>
 
                     <div className="hidden rounded-xl border border-gray-200 bg-white px-5 py-3 text-right shadow-sm sm:block">
+
                         <p className="text-xs text-gray-400">
                             Players
                         </p>
@@ -221,16 +232,17 @@ export default function Leaderboard() {
                         <p className="text-lg font-bold text-gray-900">
                             {ranks.length}
                         </p>
+
                     </div>
+
                 </div>
 
-                {/* TOP 3 */}
                 {ranks.length > 0 && (
                     <div className="mb-8 grid items-end gap-4 md:grid-cols-3">
 
-                        {/* SECOND */}
                         {second && (
                             <div className="order-2 md:order-1">
+
                                 <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
 
                                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-lg font-bold text-gray-700">
@@ -249,17 +261,20 @@ export default function Leaderboard() {
 
                                     <p className="mt-2 text-sm font-bold text-gray-700">
                                         {second.tracker_score ?? 0}
+
                                         <span className="ml-1 text-xs font-medium text-gray-400">
                                             pts
                                         </span>
                                     </p>
+
                                 </div>
+
                             </div>
                         )}
 
-                        {/* FIRST */}
                         {first && (
                             <div className="order-1 md:order-2">
+
                                 <div className="relative rounded-2xl bg-gray-900 p-7 text-center text-white shadow-lg">
 
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-4 border-gray-50 bg-gray-900 px-4 py-1 text-xs font-bold">
@@ -278,6 +293,7 @@ export default function Leaderboard() {
 
                                     <p className="mt-2 text-sm font-bold text-gray-300">
                                         {first.tracker_score ?? 0}
+
                                         <span className="ml-1 text-xs text-gray-400">
                                             pts
                                         </span>
@@ -286,13 +302,15 @@ export default function Leaderboard() {
                                     <div className="mt-5 border-t border-white/10 pt-4 text-xs text-gray-400">
                                         Current leader
                                     </div>
+
                                 </div>
+
                             </div>
                         )}
 
-                        {/* THIRD */}
                         {third && (
                             <div className="order-3">
+
                                 <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
 
                                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-lg font-bold text-gray-700">
@@ -311,21 +329,25 @@ export default function Leaderboard() {
 
                                     <p className="mt-2 text-sm font-bold text-gray-700">
                                         {third.tracker_score ?? 0}
+
                                         <span className="ml-1 text-xs font-medium text-gray-400">
                                             pts
                                         </span>
                                     </p>
+
                                 </div>
+
                             </div>
                         )}
+
                     </div>
                 )}
 
-                {/* REMAINING USERS */}
                 {remaining.length > 0 && (
                     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
 
                         <div className="border-b border-gray-100 px-5 py-4">
+
                             <p className="text-sm font-semibold text-gray-900">
                                 Rankings
                             </p>
@@ -333,14 +355,17 @@ export default function Leaderboard() {
                             <p className="mt-1 text-xs text-gray-500">
                                 Keep completing tasks to move up.
                             </p>
+
                         </div>
 
                         <div className="divide-y divide-gray-100">
+
                             {remaining.map((user) => (
                                 <div
                                     key={user.user_id}
                                     className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50"
                                 >
+
                                     <div className="w-10 text-center text-sm font-semibold text-gray-400">
                                         #{user.rank}
                                     </div>
@@ -358,32 +383,36 @@ export default function Leaderboard() {
                                     </div>
 
                                     <div className="text-right">
+
                                         <p className="font-bold text-gray-900">
                                             {user.tracker_score ?? 0}
+
                                             <span className="ml-1 text-xs font-medium text-gray-400">
                                                 pts
                                             </span>
                                         </p>
+
                                     </div>
+
                                 </div>
                             ))}
+
                         </div>
+
                     </div>
                 )}
 
-                {/* YOUR RANK */}
                 {myRank && (
                     <div className="mt-6 rounded-2xl bg-gray-900 p-5 text-white shadow-lg">
 
                         <div className="flex items-center gap-4">
 
-                            {/* Rank */}
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-gray-900">
                                 #{myRank.rank}
                             </div>
 
-                            {/* Name */}
                             <div className="flex-1">
+
                                 <p className="text-xs font-medium uppercase tracking-widest text-gray-400">
                                     Your Rank
                                 </p>
@@ -391,19 +420,23 @@ export default function Leaderboard() {
                                 <p className="mt-1 font-semibold">
                                     {myRank.username}
                                 </p>
+
                             </div>
 
-                            {/* Points */}
                             <div className="text-right">
+
                                 <p className="text-xl font-bold">
                                     {myRank.tracker_score ?? 0}
+
                                     <span className="ml-1 text-sm font-medium text-gray-400">
                                         pts
                                     </span>
                                 </p>
+
                             </div>
 
                         </div>
+
                     </div>
                 )}
 
