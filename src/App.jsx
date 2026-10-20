@@ -5,12 +5,12 @@ import { useState } from "react";
 import Home from "./components/Home";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import UCreateTask from "./components/UCreateTask";
+import CreateTask from "./components/CreateTask";
 import Tracker from "./components/Tracker";
 import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 import Leaderboard from "./components/Leaderboard";
-import CreateTask from "./components/CreateTask";
+import UCreateTask from "./components/UCreateTask";
 import UTracker from "./components/UTracker";
 import Heatmapdash from "./components/Heatmapdash";
 

@@ -201,7 +201,7 @@ export default function Leaderboard() {
                 {token && (
                     <button
                         onClick={() => navigate(-1)}
-                        className="mb-6 text-sm font-medium text-gray-600 hover:text-gray-900"
+                        className=" rounded-lg bg-gray-900 px-4 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         ← Back to Dashboard
                     </button>

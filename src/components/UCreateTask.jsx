@@ -1,232 +1,219 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
-export default function UcreateTask() {
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API_URL from "../config/api";
+
+function UCreateTask() {
   const navigate = useNavigate();
 
   const [tasks, setTasks] = useState([
     {
-      task: "",
-      completed: false,
+      taskText: "",
+      taskDate: new Date().toLocaleDateString("en-CA"),
     },
   ]);
 
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function addTask() {
-    setTasks((currentTasks) => [
-      ...currentTasks,
+  const addTask = () => {
+    setTasks((prev) => [
+      ...prev,
       {
-        task: "",
-        completed: false,
+        taskText: "",
+        taskDate: new Date().toLocaleDateString("en-CA"),
       },
     ]);
-  }
+  };
 
-  function removeTask(index) {
-    if (tasks.length === 1) {
-      return;
-    }
+  const removeTask = (index) => {
+    setTasks((prev) => prev.filter((_, i) => i !== index));
+  };
 
-    setTasks((currentTasks) =>
-      currentTasks.filter((_, i) => i !== index)
-    );
-  }
-
-  function updateTask(index, value) {
-    setTasks((currentTasks) =>
-      currentTasks.map((task, i) =>
-        i === index
-          ? {
-              ...task,
-              task: value,
-            }
-          : task
+  const updateTask = (index, field, value) => {
+    setTasks((prev) =>
+      prev.map((task, i) =>
+        i === index ? { ...task, [field]: value } : task
       )
     );
+  };
 
-    setError("");
-  }
-
-  function createTasks(e) {
+  const createTasks = async (e) => {
     e.preventDefault();
-
     setError("");
 
     for (let i = 0; i < tasks.length; i++) {
-      if (!tasks[i].task.trim()) {
+      if (!tasks[i].taskText.trim()) {
         setError(`Please enter task ${i + 1}.`);
+        return;
+      }
+
+      if (!tasks[i].taskDate) {
+        setError(`Please select a date for task ${i + 1}.`);
         return;
       }
     }
 
-    const today = new Date()
-      .toISOString()
-      .split("T")[0];
+    const token = localStorage.getItem("token");
 
-    const existingData =
-      JSON.parse(localStorage.getItem("tasks")) || {};
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
-    existingData[today] = tasks.map((task, index) => ({
-      id: index + 1,
-      task: task.task.trim(),
-      completed: false,
-    }));
+    try {
+      setLoading(true);
 
-    localStorage.setItem(
-      "tasks",
-      JSON.stringify(existingData)
-    );
+      for (const task of tasks) {
+        const response = await fetch(`${API_URL}/api/tasks`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            task_text: task.taskText.trim(),
+            task_date: task.taskDate,
+          }),
+        });
 
-    // Save today's tracker start time
-    const trackerStartTimes =
-      JSON.parse(
-        localStorage.getItem("trackerStartTimes")
-      ) || {};
+        const data = await response.json().catch(() => ({}));
 
-    trackerStartTimes[today] = Date.now();
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to create task.");
+        }
+      }
 
-    localStorage.setItem(
-      "trackerStartTimes",
-      JSON.stringify(trackerStartTimes)
-    );
-
-    navigate("/tracker");
-  }
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Create Tasks
+          </h1>
 
-      <div className="w-full max-w-2xl">
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-
-          {/* HEADER */}
-          <div className="flex items-start justify-between">
-
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Create Tasks
-              </h1>
-
-              <p className="text-gray-500 mt-2">
-                Add multiple tasks to your tracker.
-              </p>
-            </div>
-
-            <span className="rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-600">
-              {tasks.length}{" "}
-              {tasks.length === 1 ? "task" : "tasks"}
-            </span>
-
-          </div>
-
-          {/* FORM */}
-          <form
-            onSubmit={createTasks}
-            className="mt-8"
-          >
-
-            {/* TASKS */}
-            <div className="space-y-4">
-
-              {tasks.map((task, index) => (
-
-                <div
-                  key={index}
-                  className="rounded-2xl border border-gray-200 bg-gray-50 p-5"
-                >
-
-                  {/* TASK HEADER */}
-                  <div className="mb-6 flex items-center justify-between">
-
-                    <p className="text-lg font-medium text-gray-900">
-                      Task {index + 1}
-                    </p>
-
-                    {tasks.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeTask(index)}
-                        className="text-sm text-red-500 hover:text-red-700"
-                      >
-                        Remove
-                      </button>
-                    )}
-
-                  </div>
-
-                  {/* TASK INPUT */}
-                  <div>
-
-                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Task
-                    </label>
-
-                    <input
-                      type="text"
-                      value={task.task}
-                      onChange={(e) =>
-                        updateTask(
-                          index,
-                          e.target.value
-                        )
-                      }
-                      placeholder="Enter your task"
-                      className="w-full rounded-xl border border-gray-300 bg-white px-5 py-4 text-base outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
-                    />
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
-
-            {/* ADD TASK */}
-            <button
-              type="button"
-              onClick={addTask}
-              className="mt-5 w-full rounded-xl border border-dashed border-gray-400 py-4 text-sm font-medium text-gray-800 transition hover:bg-gray-50"
-            >
-              + Add Another Task
-            </button>
-
-            {/* ERROR */}
-            {error && (
-              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                {error}
-              </div>
-            )}
-
-            {/* BUTTONS */}
-            <div className="mt-7 flex gap-4">
-
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="flex-1 rounded-xl border border-gray-300 bg-white py-4 text-base font-medium text-gray-700 transition hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="submit"
-                className="flex-1 rounded-xl bg-gray-900 py-4 text-base font-medium text-white transition hover:bg-gray-800"
-              >
-                Create {tasks.length}{" "}
-                {tasks.length === 1 ? "Task" : "Tasks"}
-              </button>
-
-            </div>
-
-          </form>
-
+          <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">
+            {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
+          </span>
         </div>
 
-      </div>
+        <form onSubmit={createTasks} className="mt-6 space-y-4">
+          {tasks.map((task, index) => (
+            <div
+              key={index}
+              className="rounded-xl border border-gray-200 bg-gray-50 p-4"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-medium text-gray-900">
+                  Task {index + 1}
+                </h2>
 
+                {tasks.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeTask(index)}
+                    disabled={loading}
+                    className="text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor={`task-text-${index}`}
+                  className="mb-2 block text-sm font-medium text-gray-800"
+                >
+                  Task
+                </label>
+
+                <input
+                  id={`task-text-${index}`}
+                  type="text"
+                  value={task.taskText}
+                  onChange={(e) =>
+                    updateTask(index, "taskText", e.target.value)
+                  }
+                  placeholder="Enter your task"
+                  required
+                  disabled={loading}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label
+                  htmlFor={`task-date-${index}`}
+                  className="mb-2 block text-sm font-medium text-gray-800"
+                >
+                  Due date
+                </label>
+
+                <input
+                  id={`task-date-${index}`}
+                  type="date"
+                  value={task.taskDate}
+                  onChange={(e) =>
+                    updateTask(index, "taskDate", e.target.value)
+                  }
+                  required
+                  disabled={loading}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={addTask}
+            disabled={loading}
+            className="w-full rounded-lg border border-dashed border-gray-400 py-3 font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+          >
+            + Add Another Task
+          </button>
+
+          {error && (
+            <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
+              {error}
+            </p>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              disabled={loading}
+              className="flex-1 rounded-lg border border-gray-300 py-3 font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 rounded-lg bg-gray-900 py-3 font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading
+                ? "Creating..."
+                : `Create ${tasks.length} ${
+                    tasks.length === 1 ? "Task" : "Tasks"
+                  }`}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
+
+export default UCreateTask;
