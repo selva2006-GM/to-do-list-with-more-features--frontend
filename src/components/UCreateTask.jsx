@@ -95,6 +95,7 @@ function UCreateTask() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <button className=" rounded-lg bg-gray-900 px-6 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-60" onClick={()=>navigate("/")}>Back</button>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">
             Create Tasks

@@ -100,7 +100,7 @@ export default function CreateTask() {
       <div className="w-full max-w-2xl">
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-
+        <button className=" rounded-lg bg-gray-900 px-5 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-60" onClick={()=>navigate("/")}>Back</button>
           {/* HEADER */}
           <div className="flex items-start justify-between">
 

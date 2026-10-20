@@ -37,7 +37,7 @@ export default function App() {
                     <Route path="/login" element={<Login onlogin ={setToken} />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/tracker" element={<Tracker />} />
-                    <Route path="/ucreatetask" element={<UCreateTask />} />
+                    <Route path="/createtask" element={<CreateTask />} />
                     <Route
     path="/dashboard"
     element={token ? <Dashboard /> : <Navigate to="/login" replace />}
@@ -45,7 +45,7 @@ export default function App() {
                     <Route path="/history" element={<History />} />
                     <Route path="/heatmapdash" element={<Heatmapdash />} />
                     <Route path="/leaderboard" element={<Leaderboard />} />
-                    <Route path="/createtask" element={<CreateTask />} />
+                    <Route path="/ucreatetask" element={<UCreateTask />} />
                     <Route path="/utracker" element={<UTracker />} />
                 </Routes>
             </BrowserRouter>

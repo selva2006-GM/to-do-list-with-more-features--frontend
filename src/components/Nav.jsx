@@ -85,7 +85,7 @@ export default function Nav() {
           )}
           {!logged && (
             <Link
-            to="/ucreatetask"
+            to="/createtask"
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-900"
           >
             Create Task
@@ -93,7 +93,7 @@ export default function Nav() {
           )}
           {logged && (
              <Link
-             to="/createtask"
+             to="/ucreatetask"
              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-900"
            >
              Create Task
