@@ -11,7 +11,7 @@ export default function History() {
   const [error, setError] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
-  const [selectedNotes, setSelectedNotes] = useState(null);
+  const [expandedTask, setExpandedTask] = useState(null);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -138,150 +138,163 @@ export default function History() {
           </div>
         )}
 
-        {!loading && !error && dates.length > 0 && (
-          <div className="mt-6 space-y-6">
-            {dates.map((date) => {
-              const dayTasks = groupedTasks[date];
 
-              const completed = dayTasks.filter(
-                (task) => task.completed
-              ).length;
+{!loading && !error && dates.length > 0 && (
+  <div className="mt-6 space-y-6">
+    {dates.map((date) => {
+      const dayTasks = groupedTasks[date];
 
-              const total = dayTasks.length;
+      const completed = dayTasks.filter(
+        (task) => task.completed
+      ).length;
 
-              const percentage =
-                total === 0
-                  ? 0
-                  : Math.round((completed / total) * 100);
+      const total = dayTasks.length;
+      const percentage = Math.round((completed / total) * 100);
+      const score = completed * 10;
 
-              const score = completed * 10;
+      return (
+        <div
+          key={date}
+          className="rounded-xl border border-gray-200 bg-white p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">
+                {formatDate(date)}
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                {completed} of {total} tasks completed
+              </p>
+            </div>
+
+            <div className="text-right">
+              <p className="text-lg font-semibold text-gray-900">
+                {score}
+              </p>
+              <p className="text-xs text-gray-500">points</p>
+            </div>
+          </div>
+
+          <div className="mt-4 h-2 rounded-full bg-gray-200">
+            <div
+              className="h-2 rounded-full bg-green-600 transition-all"
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+
+          <div className="mt-2 flex justify-between text-xs text-gray-500">
+            <span>Progress</span>
+            <span>{percentage}%</span>
+          </div>
+
+          <div className="mt-5 space-y-2">
+            {dayTasks.map((task) => {
+              const isExpanded = expandedTask === task.task_id;
 
               return (
                 <div
-                  key={date}
-                  className="rounded-xl border border-gray-200 bg-white p-6"
+                  key={task.task_id}
+                  className={`overflow-hidden rounded-lg border ${
+                    task.completed
+                      ? "border-green-100 bg-green-50"
+                      : "border-gray-100 bg-gray-50"
+                  }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="font-semibold text-gray-900">
-                        {formatDate(date)}
-                      </h2>
-
-                      <p className="mt-1 text-sm text-gray-500">
-                        {completed} of {total} tasks completed
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-gray-900">
-                        {score}
-                      </p>
-
-                      <p className="text-xs text-gray-500">points</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 h-2 rounded-full bg-gray-200">
-                    <div
-                      className="h-2 rounded-full bg-green-600 transition-all"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-
-                  <div className="mt-2 flex justify-between text-xs text-gray-500">
-                    <span>Progress</span>
-                    <span>{percentage}%</span>
-                  </div>
-
-                  <div className="mt-5 space-y-2">
-                    {dayTasks.map((task) => (
+                  <div className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <div
-                        key={task.task_id}
-                        className={`flex items-center justify-between rounded-lg border px-4 py-3 ${
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${
                           task.completed
-                            ? "border-green-100 bg-green-50"
-                            : "border-gray-100 bg-gray-50"
+                            ? "bg-green-600 text-white"
+                            : "border-2 border-gray-300"
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
-                              task.completed
-                                ? "bg-green-600 text-white"
-                                : "border-2 border-gray-300"
-                            }`}
-                          >
-                            {task.completed && "✓"}
-                          </div>
-
-                          <span
-                            className={
-                              task.completed
-                                ? "text-gray-400 line-through"
-                                : "text-gray-800"
-                            }
-                          >
-                            {task.task_text}
-                          </span>
-                        </div>
-
-                        <span
-                          className={`text-xs font-medium ${
-                            task.completed
-                              ? "text-green-600"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {task.completed ? "Completed " : "Pending "}
-                          
-                        </span>
-                        <button
-                            onClick={() =>
-                            setSelectedNotes({
-                                task: task.task_text,
-                                notes: task.task_notes || "",
-                            })
-                            }
-                            className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
-                        >
-                            Notes
-                        </button>
-
-                        
+                        {task.completed && "✓"}
                       </div>
-                    ))}
+
+                      <span
+                        className={`break-words ${
+                          task.completed
+                            ? "text-gray-400 line-through"
+                            : "text-gray-800"
+                        }`}
+                      >
+                        {task.task_text}
+                      </span>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span
+                        className={`text-xs font-medium ${
+                          task.completed
+                            ? "text-green-600"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {task.completed ? "Completed" : "Pending"}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedTask(
+                            isExpanded ? null : task.task_id
+                          )
+                        }
+                        className="flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
+                      >
+                        Notes
+                        <svg
+                          className={`h-4 w-4 transition-transform duration-300 ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                        >
+                          <path
+                            d="m5 7.5 5 5 5-5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                      isExpanded
+                        ? "grid-rows-[1fr]"
+                        : "grid-rows-[0fr]"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="border-t border-gray-200/80 px-4 py-3">
+                        <p className="mb-1 text-xs font-medium text-gray-500">
+                          Task notes
+                        </p>
+
+                        <p className="whitespace-pre-wrap break-words text-sm text-gray-700">
+                          {task.task_notes?.trim() ||
+                            "No notes added for this task."}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
-        )}
-        {selectedNotes && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                <h2 className="text-lg font-semibold text-gray-900">
-                    Task Notes
-                </h2>
+        </div>
+      );
+    })}
+  </div>
+)}
 
-                <p className="mt-2 text-sm font-medium text-gray-600">
-                    {selectedNotes.task}
-                </p>
-
-                <div className="mt-4 min-h-24 whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
-                    {selectedNotes.notes || "No notes added for this task."}
-                </div>
-
-                <div className="mt-5 flex justify-end">
-                    <button
-                    onClick={() => setSelectedNotes(null)}
-                    className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-                    >
-                    Close
-                    </button>
-                </div>
-                </div>
-            </div>
-            )}
+        
       </main>
     </div>
   );

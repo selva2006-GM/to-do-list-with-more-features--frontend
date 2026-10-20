@@ -3,43 +3,52 @@ import { Link } from "react-router-dom";
 import Nav from "./Nav";
 import API_URL from "../config/api";
 import Heatmapdash from "./Heatmapdash";
-
 import UTracker from "./UTracker";
-export default function Dashboard() {
-  const [user, setUser] = useState(null);
-  const [tasks, setTasks] = useState([]);
-  const [rank, setRank] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activity, setActivity] = useState({});
 
-  // Use local date instead of UTC date
+const TASKS_CACHE_KEY = "dashboardTasks";
+const RANK_CACHE_KEY = "dashboardRank";
+
+function readCache(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export default function Dashboard() {
+  const [user, setUser] = useState(() => readCache("user", null));
+
+  const [tasks, setTasks] = useState(() => {
+    const cachedTasks = readCache(TASKS_CACHE_KEY, []);
+    return Array.isArray(cachedTasks) ? cachedTasks : [];
+  });
+
+  const [rank, setRank] = useState(() =>
+    readCache(RANK_CACHE_KEY, null)
+  );
+
+  const [refreshingTasks, setRefreshingTasks] = useState(false);
+  const [refreshingRank, setRefreshingRank] = useState(false);
+
   const today = new Date().toLocaleDateString("en-CA");
 
-  // =====================================================
-  // LOAD USER
-  // =====================================================
-
   useEffect(() => {
-    const savedUser = JSON.parse(localStorage.getItem("user"));
-
-    setUser(savedUser);
+    setUser(readCache("user", null));
   }, []);
 
-  // =====================================================
-  // GET ALL TASKS FROM DATABASE
-  // =====================================================
-
   useEffect(() => {
+    let cancelled = false;
+
     async function getTasks() {
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      setRefreshingTasks(true);
+
       try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-          console.log("No token found");
-          setLoading(false);
-          return;
-        }
-
         const response = await fetch(`${API_URL}/api/tasks`, {
           method: "GET",
           headers: {
@@ -49,77 +58,57 @@ export default function Dashboard() {
 
         const data = await response.json();
 
-        console.log("ALL TASKS FROM SERVER:", data);
-
         if (!response.ok) {
-          console.error("Tasks error:", data);
-
-          setLoading(false);
-          return;
+          throw new Error(data.message || "Failed to fetch tasks");
         }
 
-        // IMPORTANT:
-        // Keep ALL tasks here.
-        // Do NOT filter to today here.
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid tasks response");
+        }
+
+        if (cancelled) return;
+
         setTasks(data);
 
-        // =================================================
-        // BUILD HEATMAP ACTIVITY
-        // =================================================
-
-        const activityData = {};
-
-        data.forEach((task) => {
-          if (!task.task_date) {
-            return;
-          }
-
-          const date = String(task.task_date).split("T")[0];
-
-          if (!activityData[date]) {
-            activityData[date] = {
-              total: 0,
-              completed: 0,
-            };
-          }
-
-          // Every task counts toward total
-          activityData[date].total += 1;
-
-          // Completed task counts toward completed
-          if (task.completed === true) {
-            activityData[date].completed += 1;
-          }
-        });
-
-        console.log("HEATMAP ACTIVITY:", activityData);
-
-        setActivity(activityData);
+        try {
+          localStorage.setItem(
+            TASKS_CACHE_KEY,
+            JSON.stringify(data)
+          );
+        } catch (error) {
+          console.error("Failed to cache tasks:", error);
+        }
       } catch (error) {
-        console.error("Failed to fetch tasks:", error);
+        if (!cancelled) {
+          console.error("Failed to refresh tasks:", error);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setRefreshingTasks(false);
+        }
       }
     }
 
     getTasks();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // =====================================================
-  // GET USER RANK
-  // =====================================================
-
   useEffect(() => {
+    let cancelled = false;
+
     async function getRank() {
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      setRefreshingRank(true);
+
       try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-          setRank(null);
-          return;
-        }
-
         const response = await fetch(`${API_URL}/api/tasks/my-rank`, {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -128,118 +117,67 @@ export default function Dashboard() {
         const data = await response.json();
 
         if (!response.ok) {
-          console.error("Rank error:", data);
-
-          setRank(null);
-          return;
+          throw new Error(data.message || "Failed to fetch rank");
         }
 
-        setRank(data.rank);
-      } catch (error) {
-        console.error("Failed to fetch rank:", error);
+        if (cancelled) return;
 
-        setRank(null);
+        const freshRank =
+          data.rank !== null && typeof data.rank === "object"
+            ? data.rank
+            : data;
+
+        setRank(freshRank);
+
+        try {
+          localStorage.setItem(
+            RANK_CACHE_KEY,
+            JSON.stringify(freshRank)
+          );
+        } catch (error) {
+          console.error("Failed to cache rank:", error);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Failed to refresh rank:", error);
+        }
+      } finally {
+        if (!cancelled) {
+          setRefreshingRank(false);
+        }
       }
     }
 
     getRank();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // =====================================================
-  // TODAY'S TASKS
-  // =====================================================
-
   const todayTasks = tasks.filter((task) => {
-    const taskDate = String(task.task_date).split("T")[0];
-
-    return taskDate === today;
+    if (!task.task_date) return false;
+    return String(task.task_date).split("T")[0] === today;
   });
 
-  // =====================================================
-  // TODAY'S PROGRESS
-  // =====================================================
-
-  const completedTasks = todayTasks.filter((task) => task.completed).length;
+  const completedTasks = todayTasks.filter(
+    (task) => task.completed === true
+  ).length;
 
   const totalTasks = todayTasks.length;
 
   const progress =
-    totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+    totalTasks === 0
+      ? 0
+      : Math.round((completedTasks / totalTasks) * 100);
 
   const score = completedTasks * 10;
 
-  // =====================================================
-  // GENERATE LAST 84 DAYS
-  // =====================================================
-
-  const heatmapDays = Array.from({ length: 84 }, (_, index) => {
-    const date = new Date();
-
-    date.setDate(date.getDate() - (83 - index));
-
-    return date.toLocaleDateString("en-CA");
-  });
-
-  // =====================================================
-  // HEATMAP COLOR
-  // =====================================================
-
-  function getHeatmapColor(date) {
-    const day = activity[date];
-
-    if (!day || day.total === 0) {
-      return "bg-gray-100";
-    }
-
-    const percentage = day.completed / day.total;
-
-    if (percentage === 1) {
-      return "bg-green-600";
-    }
-
-    if (percentage >= 0.75) {
-      return "bg-green-500";
-    }
-
-    if (percentage >= 0.5) {
-      return "bg-green-300";
-    }
-
-    if (percentage > 0) {
-      return "bg-green-100";
-    }
-
-    return "bg-gray-100";
-  }
-
-  // =====================================================
-  // LOADING
-  // =====================================================
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100">
-        
-        <div className="flex min-h-[70vh] items-center justify-center">
-          <p className="text-gray-500">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // =====================================================
-  // UI
-  // =====================================================
-
   return (
     <div className="min-h-screen bg-gray-100">
-     <Nav/>
+      <Nav />
 
       <main className="mx-auto max-w-6xl px-6 py-8">
-        {/* =====================================================
-                    HEADER
-                ===================================================== */}
-
         <div className="mb-8">
           <p className="text-sm text-gray-500">Dashboard</p>
 
@@ -250,11 +188,13 @@ export default function Dashboard() {
           <p className="mt-2 text-sm text-gray-500">
             Here's your progress for today.
           </p>
-        </div>
 
-        {/* =====================================================
-                    NAVIGATION
-                ===================================================== */}
+          {(refreshingTasks || refreshingRank) && (
+            <p className="mt-2 text-xs text-gray-500">
+              Refreshing your latest data...
+            </p>
+          )}
+        </div>
 
         <div className="mb-8 flex flex-wrap gap-3">
           <Link
@@ -271,7 +211,6 @@ export default function Dashboard() {
             History
           </Link>
 
-
           <Link
             to="/leaderboard"
             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -280,52 +219,67 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* =====================================================
-                    STATS
-                ===================================================== */}
-
         <div className="grid gap-6 md:grid-cols-3">
-          {/* USER */}
-
           <div className="rounded-xl border border-gray-200 bg-white p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-lg font-semibold text-white">
                 {user?.username?.slice(0, 2).toUpperCase() || "U"}
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <h2 className="font-semibold text-gray-900">
                   {user?.username || "User"}
                 </h2>
 
-                <p className="text-sm text-gray-500">{user?.email || ""}</p>
+                <p className="break-all text-sm text-gray-500">
+                  {user?.email || ""}
+                </p>
               </div>
             </div>
           </div>
 
+          <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <p className="text-sm text-gray-500">Today's progress</p>
 
-          {/* SCORE */}
+            <p className="mt-2 text-3xl font-semibold text-gray-900">
+              {progress}%
+            </p>
 
+            <p className="mt-1 text-sm text-gray-500">
+              {completedTasks} of {totalTasks} tasks completed
+            </p>
+
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100">
+              <div
+                className="h-full rounded-full bg-green-600 transition-all"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <p className="text-sm text-gray-500">Today's score</p>
+
+            <p className="mt-2 text-3xl font-semibold text-gray-900">
+              {score}
+            </p>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Points earned from completed tasks
+            </p>
+          </div>
         </div>
-
-        {/* =====================================================
-                    TODAY'S TASKS
-                ===================================================== */}
 
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-          
-            <UTracker/>
+          <UTracker />
         </div>
+
         <div className="mt-6">
-        <Heatmapdash tasks={tasks} />
+          <Heatmapdash tasks={tasks} />
         </div>
 
-        {/* =====================================================
-                    RANK
-                ===================================================== */}
-
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="font-semibold text-gray-900">
                 Your leaderboard position
@@ -338,11 +292,13 @@ export default function Dashboard() {
 
             <div className="text-right">
               <p className="text-3xl font-semibold text-gray-900">
-                {rank ? `#${rank.rank}` : "--"}
+                {rank?.rank != null ? `#${rank.rank}` : "--"}
               </p>
 
               <p className="text-sm text-gray-500">
-                {rank ? `${rank.tracker_score} points` : "No rank"}
+                {rank?.tracker_score != null
+                  ? `${rank.tracker_score} points`
+                  : "No rank"}
               </p>
             </div>
           </div>
