@@ -10,6 +10,7 @@ function UCreateTask() {
     {
       taskText: "",
       taskDate: new Date().toLocaleDateString("en-CA"),
+      taskNotes: "",
     },
   ]);
 
@@ -22,6 +23,7 @@ function UCreateTask() {
       {
         taskText: "",
         taskDate: new Date().toLocaleDateString("en-CA"),
+        taskNotes: "",
       },
     ]);
   };
@@ -74,6 +76,7 @@ function UCreateTask() {
           body: JSON.stringify({
             task_text: task.taskText.trim(),
             task_date: task.taskDate,
+            task_notes: task.taskNotes.trim(),
           }),
         });
 
@@ -95,7 +98,14 @@ function UCreateTask() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <button className=" rounded-lg bg-gray-900 px-6 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-60" onClick={()=>navigate("/")}>Back</button>
+        <button
+          type="button"
+          className="rounded-lg bg-gray-900 px-6 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950"
+          onClick={() => navigate("/")}
+        >
+          Back
+        </button>
+
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">
             Create Tasks
@@ -171,6 +181,27 @@ function UCreateTask() {
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600"
                 />
               </div>
+
+              <div className="mt-4">
+                <label
+                  htmlFor={`task-notes-${index}`}
+                  className="mb-2 block text-sm font-medium text-gray-800"
+                >
+                  Notes <span className="font-normal text-gray-500">(Optional)</span>
+                </label>
+
+                <textarea
+                  id={`task-notes-${index}`}
+                  value={task.taskNotes}
+                  onChange={(e) =>
+                    updateTask(index, "taskNotes", e.target.value)
+                  }
+                  placeholder="Add details, instructions, or reminders..."
+                  rows={3}
+                  disabled={loading}
+                  className="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
             </div>
           ))}
 
@@ -184,7 +215,10 @@ function UCreateTask() {
           </button>
 
           {error && (
-            <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
+            <p
+              role="alert"
+              className="rounded-lg bg-red-50 p-3 text-sm text-red-800"
+            >
               {error}
             </p>
           )}

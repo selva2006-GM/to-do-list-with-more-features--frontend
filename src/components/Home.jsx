@@ -125,13 +125,25 @@ function HeatmapPreview() {
             </div>
 
             <div className="grid grid-flow-col grid-rows-7 gap-1">
-              {cells.map((cell) => (
-                <div
-                  key={cell.id}
-                  title="No activity"
-                  className="h-[11px] w-[11px] rounded-[2px] bg-gray-100"
-                />
-              ))}
+            
+{cells.map((cell) => {
+  const colors = [
+    "bg-gray-100",
+    "bg-green-200",
+    "bg-green-300",
+    "bg-green-500",
+    "bg-green-700",
+  ];
+
+  return (
+    <div
+      key={cell.id}
+      title={`${cell.level} completed tasks`}
+      className={`h-[11px] w-[11px] rounded-[2px] ${colors[cell.level]}`}
+    />
+  );
+})}
+
             </div>
           </div>
         </div>
