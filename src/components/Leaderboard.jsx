@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Nav from "./Nav";
-import { useNavigate, useLocation } from "react-router-dom";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Leaderboard() {
-    const location = useLocation();
-const isLeaderboardPage = location.pathname === "/leaderboard";
   const navigate = useNavigate();
+  const location = useLocation();
 
+  const isLeaderboardPage = location.pathname === "/leaderboard";
   const token = localStorage.getItem("token");
 
   const [ranks, setRanks] = useState(() => {
@@ -29,19 +30,18 @@ const isLeaderboardPage = location.pathname === "/leaderboard";
   const [loading, setLoading] = useState(
     () => !localStorage.getItem("leaderboard"),
   );
-
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadLeaderboard() {
       try {
         setError("");
 
         const rankResponse = await fetch(
           `${API_URL}/api/tasks/rank?t=${Date.now()}`,
-          {
-            cache: "no-store",
-          },
+          { cache: "no-store" },
         );
 
         if (!rankResponse.ok) {
@@ -49,63 +49,31 @@ const isLeaderboardPage = location.pathname === "/leaderboard";
         }
 
         const rankData = await rankResponse.json();
-
         const leaderboard = rankData.ranks || [];
 
-        setRanks(leaderboard);
+        if (cancelled) return;
 
+        setRanks(leaderboard);
         localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
 
         const currentToken = localStorage.getItem("token");
+        let currentUser = null;
 
-let currentUser = null;
-
-try {
-    currentUser = JSON.parse(
-        localStorage.getItem("user") || "null"
-    );
-} catch {
-    currentUser = null;
-}
-
-const matchingUser = leaderboard.find(
-    (item) =>
-        String(item.username).toLowerCase() ===
-        String(currentUser?.username || "").toLowerCase()
-);
-
-if (matchingUser) {
-    setMyRank(matchingUser);
-
-    localStorage.setItem(
-        "myRank",
-        JSON.stringify(matchingUser)
-    );
-} else if (currentToken) {
-    const myRankResponse = await fetch(
-        `${API_URL}/api/tasks/my-rank?t=${Date.now()}`,
-        {
-            cache: "no-store",
-            headers: {
-                Authorization: `Bearer ${currentToken}`,
-            },
+        try {
+          currentUser = JSON.parse(localStorage.getItem("user") || "null");
+        } catch {
+          currentUser = null;
         }
-    );
 
-    if (myRankResponse.ok) {
-        const myRankData = await myRankResponse.json();
-        const userRank = myRankData.rank;
-
-        setMyRank(userRank);
-
-        localStorage.setItem(
-            "myRank",
-            JSON.stringify(userRank)
+        const matchingUser = leaderboard.find(
+          (user) =>
+            String(user.user_id) === String(currentUser?.user_id),
         );
-    }
-}
 
-        if (currentToken) {
+        if (matchingUser) {
+          setMyRank(matchingUser);
+          localStorage.setItem("myRank", JSON.stringify(matchingUser));
+        } else if (currentToken) {
           const myRankResponse = await fetch(
             `${API_URL}/api/tasks/my-rank?t=${Date.now()}`,
             {
@@ -119,54 +87,62 @@ if (matchingUser) {
           if (myRankResponse.ok) {
             const myRankData = await myRankResponse.json();
 
-            const userRank = myRankData.rank;
-
-            setMyRank(userRank);
-
-            localStorage.setItem("myRank", JSON.stringify(userRank));
+            if (!cancelled) {
+              setMyRank(myRankData.rank || null);
+              localStorage.setItem(
+                "myRank",
+                JSON.stringify(myRankData.rank || null),
+              );
+            }
           }
+        } else {
+          setMyRank(null);
         }
       } catch (err) {
         console.error("Leaderboard error:", err);
 
-        try {
-          const cachedLeaderboard = JSON.parse(
-            localStorage.getItem("leaderboard") || "[]",
-          );
+        if (!cancelled) {
+          try {
+            const cachedLeaderboard = JSON.parse(
+              localStorage.getItem("leaderboard") || "[]",
+            );
+            const cachedRank = JSON.parse(
+              localStorage.getItem("myRank") || "null",
+            );
 
-          const cachedRank = JSON.parse(
-            localStorage.getItem("myRank") || "null",
-          );
+            setRanks(cachedLeaderboard);
+            setMyRank(cachedRank);
 
-          setRanks(cachedLeaderboard);
-          setMyRank(cachedRank);
-
-          if (cachedLeaderboard.length === 0 && !cachedRank) {
+            if (cachedLeaderboard.length === 0) {
+              setError("Unable to load leaderboard.");
+            }
+          } catch {
             setError("Unable to load leaderboard.");
           }
-        } catch {
-          setError("Unable to load leaderboard.");
         }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadLeaderboard();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Nav />
-
-        <main className="mx-auto max-w-5xl px-6 py-10">
+        {token && <Nav />}
+        <main className="mx-auto max-w-5xl px-6 pt-24 pb-10">
           <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
             <div className="animate-pulse space-y-5">
               <div className="h-7 w-56 rounded bg-gray-200" />
-
               <div className="h-4 w-72 rounded bg-gray-200" />
-
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="h-36 rounded-2xl bg-gray-100" />
                 <div className="h-44 rounded-2xl bg-gray-100" />
@@ -182,14 +158,12 @@ if (matchingUser) {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Nav />
-
-        <main className="mx-auto max-w-5xl px-6 py-10">
+        {token && <Nav />}
+        <main className="mx-auto max-w-5xl px-6 pt-24 pb-10">
           <div className="rounded-2xl border border-red-100 bg-white p-8 shadow-sm">
             <h2 className="text-xl font-semibold text-gray-900">
               Tracker Leaderboard
             </h2>
-
             <p className="mt-2 text-sm text-red-500">{error}</p>
           </div>
         </main>
@@ -200,24 +174,23 @@ if (matchingUser) {
   const first = ranks[0];
   const second = ranks[1];
   const third = ranks[2];
-
   const remaining = ranks.slice(3);
 
   return (
     <div className="min-h-screen bg-gray-50">
       {token && <Nav />}
 
-      <main className="mx-auto max-w-5xl px-6 py-8">
-        {token && (
+      <main className="mx-auto max-w-5xl px-6 pt-24 pb-8">
+        {isLeaderboardPage && (
           <button
             onClick={() => navigate(-1)}
-            className=" rounded-lg bg-gray-900 px-4 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mb-5 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950"
           >
-            ← Back to Dashboard
+            ← Back
           </button>
         )}
 
-        <div className="mb-8 flex items-end justify-between">
+        <div className="mb-8 flex items-end justify-between gap-4">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
               Community
@@ -233,19 +206,12 @@ if (matchingUser) {
           </div>
 
           <div className="hidden rounded-xl border border-gray-200 bg-white px-5 py-3 text-right shadow-sm sm:block">
-            <p className="text-xs text-gray-400">users</p>
-
-            <p className="text-lg font-bold text-gray-900">{ranks.length}</p>
+            <p className="text-xs text-gray-400">Users</p>
+            <p className="text-lg font-bold text-gray-900">
+              {ranks.length}
+            </p>
           </div>
         </div>
-        {isLeaderboardPage && (
-  <button
-    onClick={() => navigate(-1)}
-    className="rounded-lg bg-gray-900 px-4 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950"
-  >
-    ← Back
-  </button>
-)}
 
         {ranks.length > 0 && (
           <div className="mb-8 grid items-end gap-4 md:grid-cols-3">
@@ -266,7 +232,6 @@ if (matchingUser) {
 
                   <p className="mt-2 text-sm font-bold text-gray-700">
                     {second.tracker_score ?? 0}
-
                     <span className="ml-1 text-xs font-medium text-gray-400">
                       pts
                     </span>
@@ -276,10 +241,10 @@ if (matchingUser) {
             )}
 
             {first && (
-              <div className="order-1 md:order-2">
+              <div className="order-1 pt-4 md:order-2">
                 <div className="relative rounded-2xl bg-gray-900 p-7 text-center text-white shadow-lg">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border-4 border-gray-50 bg-gray-900 px-4 py-1 text-xs font-bold">
-                    #1
+                    #{first.rank ?? 1}
                   </div>
 
                   <div className="mx-auto mb-4 mt-2 flex h-16 w-16 items-center justify-center rounded-full bg-white text-xl font-bold text-gray-900">
@@ -290,7 +255,6 @@ if (matchingUser) {
 
                   <p className="mt-2 text-sm font-bold text-gray-300">
                     {first.tracker_score ?? 0}
-
                     <span className="ml-1 text-xs text-gray-400">pts</span>
                   </p>
 
@@ -318,7 +282,6 @@ if (matchingUser) {
 
                   <p className="mt-2 text-sm font-bold text-gray-700">
                     {third.tracker_score ?? 0}
-
                     <span className="ml-1 text-xs font-medium text-gray-400">
                       pts
                     </span>
@@ -333,7 +296,6 @@ if (matchingUser) {
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div className="border-b border-gray-100 px-5 py-4">
               <p className="text-sm font-semibold text-gray-900">Rankings</p>
-
               <p className="mt-1 text-xs text-gray-500">
                 Keep completing tasks to move up.
               </p>
@@ -354,13 +316,14 @@ if (matchingUser) {
                   </div>
 
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{user.username}</p>
+                    <p className="font-medium text-gray-900">
+                      {user.username}
+                    </p>
                   </div>
 
                   <div className="text-right">
                     <p className="font-bold text-gray-900">
                       {user.tracker_score ?? 0}
-
                       <span className="ml-1 text-xs font-medium text-gray-400">
                         pts
                       </span>
@@ -383,20 +346,27 @@ if (matchingUser) {
                 <p className="text-xs font-medium uppercase tracking-widest text-gray-400">
                   Your Rank
                 </p>
-
                 <p className="mt-1 font-semibold">{myRank.username}</p>
               </div>
 
               <div className="text-right">
                 <p className="text-xl font-bold">
                   {myRank.tracker_score ?? 0}
-
                   <span className="ml-1 text-sm font-medium text-gray-400">
                     pts
                   </span>
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {ranks.length === 0 && (
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
+            <p className="font-medium text-gray-900">No rankings yet</p>
+            <p className="mt-2 text-sm text-gray-500">
+              Complete some tasks to appear on the leaderboard.
+            </p>
           </div>
         )}
       </main>

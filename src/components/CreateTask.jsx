@@ -90,8 +90,8 @@ export default function CreateTask() {
       "trackerStartTimes",
       JSON.stringify(trackerStartTimes)
     );
-
-    navigate("/tracker");
+   
+    navigate("/");
   }
 
   return (

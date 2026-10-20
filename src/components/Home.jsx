@@ -1,85 +1,98 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Nav from "./Nav";
 import Leaderboard from "./Leaderboard";
+import Tracker from "./Tracker";
 import {
-    Database,
-    ChartNoAxesColumnIncreasing,
-    Trophy,
-    Timer,
-    CalendarCheck,
-    Target,
-  } from "lucide-react";
+  Database,
+  ChartNoAxesColumnIncreasing,
+  Trophy,
+  Timer,
+  CalendarCheck,
+  Target,
+} from "lucide-react";
 
-  const features = [
-    {
-      number: "01",
-      icon: Database,
-      title: "Every Task, Saved",
-      description:
-        "Your tasks and progress are stored in the database, letting you revisit your work and track your accomplishments over time.",
-      color: "bg-blue-50 text-blue-700",
-    },
-    {
-      number: "02",
-      icon: ChartNoAxesColumnIncreasing,
-      title: "Visualize Your Consistency",
-      description:
-        "Explore your activity through a GitHub-style heatmap. Identify productive streaks and build better daily habits.",
-      color: "bg-green-50 text-green-700",
-    },
-    {
-      number: "03",
-      icon: Trophy,
-      title: "Compete With Friends",
-      description:
-        "Compare scores on the leaderboard, celebrate achievements, and motivate your friends to stay productive.",
-      color: "bg-amber-50 text-amber-700",
-    },
-    {
-      number: "04",
-      icon: Timer,
-      title: "Track Your Time",
-      description:
-        "Measure the time you spend on tasks and understand how you use your day.",
-      color: "bg-purple-50 text-purple-700",
-    },
-    {
-      number: "05",
-      icon: CalendarCheck,
-      title: "Review Your Progress",
-      description:
-        "Look back at completed tasks, discover patterns, and see how your daily efforts add up over time.",
-      color: "bg-pink-50 text-pink-700",
-    },
-    {
-      number: "06",
-      icon: Target,
-      title: "Turn Goals Into Action",
-      description:
-        "Break your plans into manageable tasks, celebrate progress, and build a routine you can maintain.",
-      color: "bg-orange-50 text-orange-700",
-    },
+const features = [
+  {
+    number: "01",
+    icon: Database,
+    title: "Every Task, Saved",
+    description:
+      "Your tasks and progress are stored in the database, letting you revisit your work and track your accomplishments over time.",
+    color: "bg-blue-50 text-blue-700",
+  },
+  {
+    number: "02",
+    icon: ChartNoAxesColumnIncreasing,
+    title: "Visualize Your Consistency",
+    description:
+      "Explore your activity through a GitHub-style heatmap. Identify productive streaks and build better daily habits.",
+    color: "bg-green-50 text-green-700",
+  },
+  {
+    number: "03",
+    icon: Trophy,
+    title: "Compete With Friends",
+    description:
+      "Compare scores on the leaderboard, celebrate achievements, and motivate your friends to stay productive.",
+    color: "bg-amber-50 text-amber-700",
+  },
+  {
+    number: "04",
+    icon: Timer,
+    title: "Track Your Time",
+    description:
+      "Measure the time you spend on tasks and understand how you use your day.",
+    color: "bg-purple-50 text-purple-700",
+  },
+  {
+    number: "05",
+    icon: CalendarCheck,
+    title: "Review Your Progress",
+    description:
+      "Look back at completed tasks, discover patterns, and see how your daily efforts add up over time.",
+    color: "bg-pink-50 text-pink-700",
+  },
+  {
+    number: "06",
+    icon: Target,
+    title: "Turn Goals Into Action",
+    description:
+      "Break your plans into manageable tasks, celebrate progress, and build a routine you can maintain.",
+    color: "bg-orange-50 text-orange-700",
+  },
+];
+
+function getTodayTasks() {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const savedTasks = JSON.parse(localStorage.getItem("tasks") || "{}");
+
+    return Array.isArray(savedTasks[today])
+      ? savedTasks[today]
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function HeatmapPreview() {
+  const cells = Array.from({ length: 7 * 20 }, (_, i) => ({
+    id: i,
+    level: Math.floor(Math.random() * 5),
+  }));
+
+  const colors = [
+    "bg-gray-100",
+    "bg-green-200",
+    "bg-green-300",
+    "bg-green-500",
+    "bg-green-700",
   ];
 
-
-export default function Home() {
-  const token = localStorage.getItem("token");
-  const navigate = useNavigate();
-
-  function handleCreateTask() {
-    navigate(token ? "/ucreatetask" : "/register");
-  }
-  
-function HeatmapPreview() {
-    const cells = Array.from({ length: 7 * 20 }, (_, i) => ({
-        id: i,
-        level: Math.floor(Math.random() * 5),
-      }));
-
   return (
-    <div className="mx-auto max-w-6xl  rounded-2xl border border-gray-200 bg-white p-6 text-gray-700 shadow-sm ">
+    <div className="mx-auto max-w-6xl rounded-2xl border border-gray-200 bg-white p-6 text-gray-700 shadow-sm">
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-3xl font-medium text-gray-950">280</span>
         <span className="text-lg text-gray-500">
@@ -138,25 +151,13 @@ function HeatmapPreview() {
             </div>
 
             <div className="grid grid-flow-col grid-rows-7 gap-1">
-            
-{cells.map((cell) => {
-  const colors = [
-    "bg-gray-100",
-    "bg-green-200",
-    "bg-green-300",
-    "bg-green-500",
-    "bg-green-700",
-  ];
-
-  return (
-    <div
-      key={cell.id}
-      title={`${cell.level} completed tasks`}
-      className={`h-[11px] w-[11px] rounded-[2px] ${colors[cell.level]}`}
-    />
-  );
-})}
-
+              {cells.map((cell) => (
+                <div
+                  key={cell.id}
+                  title={`${cell.level} completed tasks`}
+                  className={`h-[11px] w-[11px] rounded-[2px] ${colors[cell.level]}`}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -164,13 +165,7 @@ function HeatmapPreview() {
 
       <div className="mt-5 flex items-center justify-end gap-2 text-xs text-gray-500">
         <span className="mr-1">Less</span>
-        {[
-          "bg-gray-100",
-          "bg-green-200",
-          "bg-green-300",
-          "bg-green-500",
-          "bg-green-700",
-        ].map((color) => (
+        {colors.map((color) => (
           <span
             key={color}
             className={`h-5 w-5 rounded-sm ${color}`}
@@ -182,13 +177,42 @@ function HeatmapPreview() {
   );
 }
 
+export default function Home() {
+  const navigate = useNavigate();
+  const [hasTasks, setHasTasks] = useState(
+    () => getTodayTasks().length > 0
+  );
+
+  useEffect(() => {
+    const checkTasks = () => {
+      setHasTasks(getTodayTasks().length > 0);
+    };
+
+    checkTasks();
+
+    window.addEventListener("focus", checkTasks);
+    window.addEventListener("tasksUpdated", checkTasks);
+    window.addEventListener("storage", checkTasks);
+
+    return () => {
+      window.removeEventListener("focus", checkTasks);
+      window.removeEventListener("tasksUpdated", checkTasks);
+      window.removeEventListener("storage", checkTasks);
+    };
+  }, []);
+
+  const token = localStorage.getItem("token");
+
+  function handleCreateTask() {
+    navigate(token ? "/ucreatetask" : "/register");
+  }
+
 
   return (
-    <>
+    <section className="pt-16">
       <Nav />
 
       <main className="min-h-screen bg-gray-50 text-gray-900">
-        {/* Hero */}
         <section className="relative overflow-hidden bg-white">
           <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-green-100 opacity-60 blur-3xl" />
           <div className="pointer-events-none absolute -right-24 top-20 h-72 w-72 rounded-full bg-blue-100 opacity-60 blur-3xl" />
@@ -201,9 +225,7 @@ function HeatmapPreview() {
 
             <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-bold tracking-tight sm:text-6xl">
               Make every day
-              <span className="block text-green-800">
-                count.
-              </span>
+              <span className="block text-green-800">count.</span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
@@ -236,7 +258,11 @@ function HeatmapPreview() {
           </div>
         </section>
 
-        {/* Features */}
+        {hasTasks && (
+  <section className="mx-auto max-w-6xl px-6 py-10">
+    <Tracker />
+  </section>
+)}
         <section className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-bold uppercase tracking-widest text-green-800">
@@ -260,10 +286,10 @@ function HeatmapPreview() {
                 className="group rounded-2xl border border-gray-200 bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-green-300 hover:shadow-lg"
               >
                 <div
-  className={`flex h-12 w-12 items-center justify-center rounded-xl ${feature.color}`}
->
-  <feature.icon size={24} strokeWidth={1.8} />
-</div>
+                  className={`flex h-12 w-12 items-center justify-center rounded-xl ${feature.color}`}
+                >
+                  <feature.icon size={24} strokeWidth={1.8} />
+                </div>
 
                 <h3 className="mt-5 text-lg font-semibold">
                   {feature.title}
@@ -277,10 +303,8 @@ function HeatmapPreview() {
           </div>
         </section>
 
-        {/* Heatmap Showcase */}
         <HeatmapPreview />
 
-        {/* Leaderboard */}
         <section className="mx-auto max-w-6xl px-6 py-20">
           <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
@@ -311,7 +335,6 @@ function HeatmapPreview() {
           </div>
         </section>
 
-        {/* Final CTA */}
         <section className="px-6 pb-20">
           <div className="mx-auto max-w-5xl rounded-3xl bg-green-800 px-6 py-12 text-center text-white sm:px-12 sm:py-16">
             <h2 className="text-3xl font-bold sm:text-4xl">
@@ -332,6 +355,6 @@ function HeatmapPreview() {
           </div>
         </section>
       </main>
-    </>
+    </section>
   );
 }

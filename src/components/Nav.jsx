@@ -15,13 +15,13 @@ export default function Nav() {
   }, []);
 
   function logout() {
-    localStorage.clear();
-    sessionStorage.clear();
-  
-    setlogget(false);
-    navigate("/");
-    window.location.reload();
-  }
+  localStorage.clear();
+  sessionStorage.clear();
+
+  setlogget(false);
+  navigate("/");
+  window.location.reload();
+}
   function reset() {
     const confirmReset = window.confirm(
       "Are you sure you want to reset all tasks?",
@@ -36,7 +36,7 @@ export default function Nav() {
   }
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
+    <nav className="fixed top-0 left-0 z-50 w-full border-b border-gray-200 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
