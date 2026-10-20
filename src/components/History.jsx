@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../config/api";
@@ -11,8 +10,8 @@ export default function History() {
   const [error, setError] = useState("");
   const [expandedTask, setExpandedTask] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
-  const [visibleDays, setVisibleDays] = useState(10);
-const [loadingMore, setLoadingMore] = useState(false);
+  const [visibleDays, setVisibleDays] = useState(5);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const getLocalDateString = (date) => {
     const year = date.getFullYear();
@@ -66,32 +65,28 @@ const [loadingMore, setLoadingMore] = useState(false);
 
   const filteredTasks = tasks.filter((task) => {
     const date = String(task.task_date).split("T")[0];
-  
+
     if (selectedDate) {
       return date === selectedDate;
     }
-  
+
     return date <= today;
   });
-  
+
   const groupedTasks = filteredTasks.reduce((groups, task) => {
     const date = String(task.task_date).split("T")[0];
-  
+
     if (!groups[date]) {
       groups[date] = [];
     }
-  
+
     groups[date].push(task);
     return groups;
   }, {});
-  
-  const allDates = Object.keys(groupedTasks).sort((a, b) =>
-    b.localeCompare(a)
-  );
-  
-  const dates = selectedDate
-    ? allDates
-    : allDates.slice(0, visibleDays);
+
+  const allDates = Object.keys(groupedTasks).sort((a, b) => b.localeCompare(a));
+
+  const dates = selectedDate ? allDates : allDates.slice(0, visibleDays);
 
   const formatDate = (dateString) => {
     const date = new Date(`${dateString}T00:00:00`);
@@ -105,25 +100,23 @@ const [loadingMore, setLoadingMore] = useState(false);
   };
   useEffect(() => {
     if (selectedDate || loading || error) return;
-  
+
     const handleScroll = () => {
       const nearBottom =
         window.innerHeight + window.scrollY >=
         document.documentElement.scrollHeight - 200;
-  
+
       if (nearBottom && visibleDays < allDates.length && !loadingMore) {
         setLoadingMore(true);
-  
-        setVisibleDays((previous) =>
-          Math.min(previous + 10, allDates.length)
-        );
-  
+
+        setVisibleDays((previous) => Math.min(previous + 10, allDates.length));
+
         setLoadingMore(false);
       }
     };
-  
+
     window.addEventListener("scroll", handleScroll);
-  
+
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
@@ -132,6 +125,7 @@ const [loadingMore, setLoadingMore] = useState(false);
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="mx-auto max-w-4xl px-6 py-8">
+      <div className="sticky top-0 z-50 -mx-6 border-b border-gray-200 bg-gray-100/95 px-6 pb-3 pt-2 backdrop-blur-md">
         <button
           onClick={() => navigate(-1)}
           className="m-1 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950"
@@ -139,57 +133,56 @@ const [loadingMore, setLoadingMore] = useState(false);
           ← Back to Dashboard
         </button>
 
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Task History
-          </h1>
+        
 
-          <p className="mt-2 text-sm text-gray-500">
-            {selectedDate
-              ? `Showing tasks for ${formatDate(selectedDate)}.`
-              : `Showing your task history from ${formatDate(tenDaysAgo)} to ${formatDate(today)}.`}
-          </p>
-        </div>
+  <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <h1 className="text-2xl font-semibold text-gray-900">
+      Task History
+    </h1>
 
-        {error && (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-            {error}
-          </div>
-        )}
+    <p className="mt-2 text-sm text-gray-500">
+      {selectedDate
+        ? `Showing tasks for ${formatDate(selectedDate)}.`
+        : `Showing your task history from ${formatDate(tenDaysAgo)} to ${formatDate(today)}.`}
+    </p>
 
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
-          <label
-            htmlFor="date"
-            className="flex flex-col gap-2 text-sm font-medium text-gray-700"
-          >
-            Filter by date
-            <input
-              type="date"
-              name="date"
-              id="date"
-              max={today}
-              value={selectedDate}
-              onChange={(event) => {
-                setSelectedDate(event.target.value);
-                setExpandedTask(null);
-              }}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal text-gray-900 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
-            />
-          </label>
+    <div className="mt-3">
+      <label
+        htmlFor="date"
+        className="flex flex-col gap-2 text-sm font-medium text-gray-700"
+      >
+        Filter by date
 
-          {selectedDate && (
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedDate("");
-                setExpandedTask(null);
-              }}
-              className="mt-3 text-sm font-medium text-gray-600 underline underline-offset-4 hover:text-gray-900"
-            >
-              Clear date filter
-            </button>
-          )}
-        </div>
+        <input
+          type="date"
+          name="date"
+          id="date"
+          max={today}
+          value={selectedDate}
+          onChange={(event) => {
+            setSelectedDate(event.target.value);
+            setExpandedTask(null);
+          }}
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal text-gray-900 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
+        />
+      </label>
+
+      {selectedDate && (
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedDate("");
+            setExpandedTask(null);
+          }}
+          className="mt-2 text-sm font-medium text-gray-600 underline underline-offset-4 hover:text-gray-900"
+        >
+          Clear date filter
+        </button>
+      )}
+    </div>
+  </div>
+</div>
+
 
         {loading && (
           <div className="mt-6 rounded-xl border border-gray-200 bg-white p-8 text-center">
@@ -210,18 +203,19 @@ const [loadingMore, setLoadingMore] = useState(false);
           </div>
         )}
 
-        {!loading && !error && tasks.length > 0 && filteredTasks.length === 0 && (
-          <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-            <p className="text-gray-700 font-medium">
-              No tasks found.
-            </p>
-            <p className="mt-2 text-sm text-gray-500">
-              {selectedDate
-                ? "There are no tasks for this date."
-                : "There are no tasks in the last 10 days."}
-            </p>
-          </div>
-        )}
+        {!loading &&
+          !error &&
+          tasks.length > 0 &&
+          filteredTasks.length === 0 && (
+            <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+              <p className="text-gray-700 font-medium">No tasks found.</p>
+              <p className="mt-2 text-sm text-gray-500">
+                {selectedDate
+                  ? "There are no tasks for this date."
+                  : "There are no tasks in the last 10 days."}
+              </p>
+            </div>
+          )}
 
         {!loading && !error && dates.length > 0 && (
           <div className="mt-6 space-y-6">
@@ -229,7 +223,7 @@ const [loadingMore, setLoadingMore] = useState(false);
               const dayTasks = groupedTasks[date];
 
               const completed = dayTasks.filter(
-                (task) => task.completed
+                (task) => task.completed,
               ).length;
 
               const total = dayTasks.length;
@@ -323,7 +317,7 @@ const [loadingMore, setLoadingMore] = useState(false);
                                 type="button"
                                 onClick={() =>
                                   setExpandedTask(
-                                    isExpanded ? null : task.task_id
+                                    isExpanded ? null : task.task_id,
                                   )
                                 }
                                 className="flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
@@ -350,9 +344,7 @@ const [loadingMore, setLoadingMore] = useState(false);
 
                           <div
                             className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-                              isExpanded
-                                ? "grid-rows-[1fr]"
-                                : "grid-rows-[0fr]"
+                              isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
                             }`}
                           >
                             <div className="overflow-hidden">
@@ -378,18 +370,20 @@ const [loadingMore, setLoadingMore] = useState(false);
           </div>
         )}
         {!loading && !error && !selectedDate && (
-  <div className="py-6 text-center">
-    {visibleDays < allDates.length ? (
-      <p className="text-sm text-gray-500">
-        {loadingMore ? "Loading more history..." : "Scroll down to load older history"}
-      </p>
-    ) : (
-      <p className="text-sm text-gray-400">
-        You have reached the end of your history.
-      </p>
-    )}
-  </div>
-)}
+          <div className="py-6 text-center">
+            {visibleDays < allDates.length ? (
+              <p className="text-sm text-gray-500">
+                {loadingMore
+                  ? "Loading more history..."
+                  : "Scroll down to load older history"}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400">
+                You have reached the end of your history.
+              </p>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
