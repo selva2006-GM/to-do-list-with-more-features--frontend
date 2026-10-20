@@ -3,52 +3,65 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Nav from "./Nav";
 import Leaderboard from "./Leaderboard";
+import {
+    Database,
+    ChartNoAxesColumnIncreasing,
+    Trophy,
+    Timer,
+    CalendarCheck,
+    Target,
+  } from "lucide-react";
 
-
-const features = [
-  {
-    number: "01",
-    title: "Every Task, Saved",
-    description:
-      "Your tasks and progress are stored in the database, letting you revisit your work and track your accomplishments over time.",
-    color: "border-blue-200",
-  },
-  {
-    number: "02",
-    title: "Visualize Your Consistency",
-    description:
-      "Explore your activity through a GitHub-style heatmap. Identify productive streaks and build better daily habits.",
-    color: "border-green-200",
-  },
-  {
-    number: "03",
-    title: "Compete With Friends",
-    description:
-      "Compare scores on the leaderboard, celebrate achievements, and motivate your friends to stay productive.",
-    color: "border-amber-200",
-  },
-  {
-    number: "04",
-    title: "Track Your Time",
-    description:
-      "Measure the time you spend on tasks and understand how you use your day.",
-    color: "border-purple-200",
-  },
-  {
-    number: "05",
-    title: "Review Your Progress",
-    description:
-      "Look back at completed tasks, discover patterns, and see how your daily efforts add up over time.",
-    color: "border-pink-200",
-  },
-  {
-    number: "06",
-    title: "Turn Goals Into Action",
-    description:
-      "Break your plans into manageable tasks, celebrate progress, and build a routine you can maintain.",
-    color: "border-orange-200",
-  },
-];
+  const features = [
+    {
+      number: "01",
+      icon: Database,
+      title: "Every Task, Saved",
+      description:
+        "Your tasks and progress are stored in the database, letting you revisit your work and track your accomplishments over time.",
+      color: "bg-blue-50 text-blue-700",
+    },
+    {
+      number: "02",
+      icon: ChartNoAxesColumnIncreasing,
+      title: "Visualize Your Consistency",
+      description:
+        "Explore your activity through a GitHub-style heatmap. Identify productive streaks and build better daily habits.",
+      color: "bg-green-50 text-green-700",
+    },
+    {
+      number: "03",
+      icon: Trophy,
+      title: "Compete With Friends",
+      description:
+        "Compare scores on the leaderboard, celebrate achievements, and motivate your friends to stay productive.",
+      color: "bg-amber-50 text-amber-700",
+    },
+    {
+      number: "04",
+      icon: Timer,
+      title: "Track Your Time",
+      description:
+        "Measure the time you spend on tasks and understand how you use your day.",
+      color: "bg-purple-50 text-purple-700",
+    },
+    {
+      number: "05",
+      icon: CalendarCheck,
+      title: "Review Your Progress",
+      description:
+        "Look back at completed tasks, discover patterns, and see how your daily efforts add up over time.",
+      color: "bg-pink-50 text-pink-700",
+    },
+    {
+      number: "06",
+      icon: Target,
+      title: "Turn Goals Into Action",
+      description:
+        "Break your plans into manageable tasks, celebrate progress, and build a routine you can maintain.",
+      color: "bg-orange-50 text-orange-700",
+    },
+  ];
 
 
 export default function Home() {
@@ -247,10 +260,10 @@ function HeatmapPreview() {
                 className="group rounded-2xl border border-gray-200 bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-green-300 hover:shadow-lg"
               >
                 <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${feature.color}`}
-                >
-                  {feature.icon}
-                </div>
+  className={`flex h-12 w-12 items-center justify-center rounded-xl ${feature.color}`}
+>
+  <feature.icon size={24} strokeWidth={1.8} />
+</div>
 
                 <h3 className="mt-5 text-lg font-semibold">
                   {feature.title}
