@@ -15,14 +15,13 @@ export default function Nav() {
   }, []);
 
   function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
+    localStorage.clear();
+    sessionStorage.clear();
+  
     setlogget(false);
     navigate("/");
     window.location.reload();
   }
-
   function reset() {
     const confirmReset = window.confirm(
       "Are you sure you want to reset all tasks?",
