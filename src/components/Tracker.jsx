@@ -229,7 +229,7 @@ export default function Tracker() {
         {/* BACK */}
         <button
           onClick={() => navigate(-2)}
-          className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+          className=" rounded-lg bg-gray-900 px-4 py-1.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <span className="text-lg">←</span>
           Back

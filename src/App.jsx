@@ -1,7 +1,7 @@
 
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
+import { useState } from "react";
 import Home from "./components/Home";
 import Login from "./components/Login";
 import Register from "./components/Register";
@@ -17,7 +17,7 @@ import Heatmapdash from "./components/Heatmapdash";
 import { ThemeProvider } from "./ThemeContext";
 
 export default function App() {
-    const token = localStorage.getItem("token");
+    const [token, setToken] = useState(()=>localStorage.getItem("token"));
 
     return (
         <ThemeProvider>
@@ -34,7 +34,7 @@ export default function App() {
                         }
                     />
 
-                    <Route path="/login" element={<Login />} />
+                    <Route path="/login" element={<Login onlogin ={setToken} />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/tracker" element={<Tracker />} />
                     <Route path="/ucreatetask" element={<UCreateTask />} />

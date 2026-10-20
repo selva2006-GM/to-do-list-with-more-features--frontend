@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API_URL from "../config/api";
 
-export default function Login() {
+export default function Login({onlogin}) {
     const navigate = useNavigate();
 
     const [error, setError] = useState("");
@@ -48,8 +48,8 @@ export default function Login() {
                     JSON.stringify(data.user)
                 );
             }
-
-            navigate("/dashboard");
+            onlogin(data.token);
+            navigate("/dashboard", {replace: true});
 
         } catch (error) {
             console.error("LOGIN ERROR:", error);
@@ -63,7 +63,7 @@ export default function Login() {
         <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
 
             <div className="w-full max-w-md">
-                <button className=" rounded-lg bg-gray-900 px-4 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-60">Back</button>
+                <button className=" rounded-lg bg-gray-900 px-4 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-60" onClick={()=>navigate("/")}>Back</button>
                 <form
                     onSubmit={login}
                     className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm"
