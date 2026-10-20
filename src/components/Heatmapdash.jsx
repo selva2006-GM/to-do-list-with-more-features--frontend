@@ -366,24 +366,18 @@ export default function Heatmapdash() {
                           const total =
                             day?.total || 0;
 
-                          return (
-                            <div
-                              key={date}
-                              title={`${formatDisplayDate(
-                                date
-                              )} — ${completed}/${total} completed`}
-                              className={`
-                                h-4
-                                w-4
-                                cursor-pointer
-                                rounded-[2px]
-                                ${getHeatmapColor(date)}
-                                transition
-                                hover:ring-2
-                                hover:ring-gray-400
-                              `}
-                            />
-                          );
+                            return (
+                                <div
+                                  key={date}
+                                  title={`${formatDisplayDate(date)} — ${completed}/${total} completed`}
+                                  onClick={() => navigate(`/history?date=${date}`)}
+                                  className={`
+                                    h-4 w-4 cursor-pointer rounded-[2px]
+                                    ${getHeatmapColor(date)}
+                                    transition hover:ring-2 hover:ring-gray-400
+                                  `}
+                                />
+                              );
                         })}
                       </div>
                     ))}

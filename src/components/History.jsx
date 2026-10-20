@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../config/api";
 
@@ -9,9 +10,10 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedTask, setExpandedTask] = useState(null);
-  const [selectedDate, setSelectedDate] = useState("");
   const [visibleDays, setVisibleDays] = useState(5);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchParams] = useSearchParams();
+  const selectedDate = searchParams.get("date");
 
   const getLocalDateString = (date) => {
     const year = date.getFullYear();
@@ -63,15 +65,11 @@ export default function History() {
     fetchTasks();
   }, []);
 
-  const filteredTasks = tasks.filter((task) => {
-    const date = String(task.task_date).split("T")[0];
-
-    if (selectedDate) {
-      return date === selectedDate;
-    }
-
-    return date <= today;
-  });
+  const filteredTasks = selectedDate
+  ? tasks.filter(
+      (task) => String(task.task_date).split("T")[0] === selectedDate
+    )
+  : tasks;
 
   const groupedTasks = filteredTasks.reduce((groups, task) => {
     const date = String(task.task_date).split("T")[0];
@@ -136,9 +134,9 @@ export default function History() {
         
 
   <div className="rounded-xl border border-gray-200 bg-white p-4">
-    <h1 className="text-2xl font-semibold text-gray-900">
-      Task History
-    </h1>
+  <h2 className="text-xl font-semibold">
+  History for {selectedDate || "All Dates"}
+</h2>
 
     <p className="mt-2 text-sm text-gray-500">
       {selectedDate

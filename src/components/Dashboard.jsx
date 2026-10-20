@@ -173,6 +173,41 @@ export default function Dashboard() {
 
   const score = completedTasks * 10;
 
+  const weeklyData = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    const mondayOffset = (date.getDay() + 6) % 7;
+  
+    date.setDate(date.getDate() - mondayOffset + index);
+  
+    const dateString = [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0"),
+    ].join("-");
+  
+    const dayTasks = tasks.filter(
+      (task) => String(task.task_date).split("T")[0] === dateString
+    );
+  
+    const completed = dayTasks.filter(
+      (task) =>
+        task.completed === true ||
+        task.completed === 1 ||
+        task.completed === "true"
+    ).length;
+  
+    return {
+      day: date.toLocaleDateString("en-US", { weekday: "short" }),
+      date: dateString,
+      completed,
+      total: dayTasks.length,
+    };
+  });
+  
+  const weeklyMax = Math.max(
+    1,
+    ...weeklyData.map((day) => day.total)
+  );
   return (
     <div className="min-h-screen bg-gray-100">
       <Nav />
@@ -277,6 +312,48 @@ export default function Dashboard() {
         <div className="mt-6">
           <Heatmapdash tasks={tasks} />
         </div>
+        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+  <div className="mb-6">
+    <h2 className="text-lg font-semibold text-gray-900">
+      Weekly productivity
+    </h2>
+    <p className="mt-1 text-sm text-gray-500">
+      Tasks completed each day this week.
+    </p>
+  </div>
+
+  <div className="flex h-48 items-end justify-between gap-3">
+    {weeklyData.map((day) => (
+      <div
+        key={day.date}
+        className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+        title={`${day.date}: ${day.completed} of ${day.total} completed`}
+      >
+        <span className="text-xs font-medium text-gray-700">
+          {day.completed}
+        </span>
+
+        <div className="flex h-32 w-full items-end justify-center">
+          <div
+            className="w-full max-w-12 rounded-t-md bg-green-500 transition-all"
+            style={{
+              height:
+                day.total === 0
+                  ? "4px"
+                  : `${Math.max(
+                      (day.completed / weeklyMax) * 100,
+                      4
+                    )}%`,
+              opacity: day.completed === 0 ? 0.25 : 1,
+            }}
+          />
+        </div>
+
+        <span className="text-xs text-gray-500">{day.day}</span>
+      </div>
+    ))}
+  </div>
+</div>
 
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
           <div className="flex items-center justify-between gap-4">
