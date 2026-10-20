@@ -97,12 +97,12 @@ function HeatmapPreview() {
       <div className="mt-7 flex flex-wrap items-center gap-x-8 gap-y-4">
         <p>
           Total active days:{" "}
-          <span className="font-medium text-gray-950">0</span>
+          <span className="font-medium text-gray-950">114</span>
         </p>
 
         <p>
           Max streak:{" "}
-          <span className="font-medium text-gray-950">0</span>
+          <span className="font-medium text-gray-950">23</span>
         </p>
 
         <select
