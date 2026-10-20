@@ -63,7 +63,7 @@ export default function Login() {
         <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
 
             <div className="w-full max-w-md">
-
+                <button className=" rounded-lg bg-gray-900 px-4 py-2.5 m-1 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950 disabled:cursor-not-allowed disabled:opacity-60">Back</button>
                 <form
                     onSubmit={login}
                     className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm"

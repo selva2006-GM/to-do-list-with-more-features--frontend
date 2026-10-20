@@ -403,7 +403,7 @@ export default function Tracker() {
               <p className="font-medium text-gray-900">
                 Want to keep your progress?
               </p>
-
+              
               <p className="mt-1 text-sm text-gray-500">
                 Create an account to save your tracker
                 history and access it later.
