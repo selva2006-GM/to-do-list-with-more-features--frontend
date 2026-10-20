@@ -81,7 +81,7 @@ function HeatmapPreview() {
   return (
     <div className="mx-auto max-w-6xl  rounded-2xl border border-gray-200 bg-white p-6 text-gray-700 shadow-sm ">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-3xl font-medium text-gray-950">0</span>
+        <span className="text-3xl font-medium text-gray-950">280</span>
         <span className="text-lg text-gray-500">
           tasks since your start date
         </span>
