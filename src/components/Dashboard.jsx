@@ -212,7 +212,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-100">
       <Nav />
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto max-w-6xl px-6 py-8 mt-15">
         <div className="mb-8">
           <p className="text-sm text-gray-500">Dashboard</p>
 

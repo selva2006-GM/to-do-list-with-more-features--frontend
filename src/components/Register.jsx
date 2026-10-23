@@ -10,17 +10,21 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [Loading, setLoading] = useState(false);
 
   async function register(e) {
     e.preventDefault();
+    setLoading(true);
 
     if (!username || !email || !password || !confirmPassword) {
       alert("Please fill all fields");
+      setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       alert("Passwords do not match");
+      setLoading(false);
       return;
     }
 
@@ -44,20 +48,13 @@ export default function Register() {
         return;
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
-
-      alert("Registration successful!");
-
-      navigate("/login");
+      sessionStorage.setItem("verificationEmail", email.trim());
+      setLoading(false);
+      navigate("/verify-email");
     } catch (error) {
       console.error("REGISTER ERROR:", error);
       alert("Unable to connect to server.");
+      setLoading(false);
     }
   }
 
@@ -172,7 +169,7 @@ export default function Register() {
               type="submit"
               className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 active:bg-gray-950"
             >
-              Register
+              {Loading ? "Register..." : "Register"}
             </button>
 
             {/* Login */}
